@@ -1,0 +1,10 @@
+TDD!!!
+
+1. create test
+2. just production code enough to pass
+
+1. It creates codebase testable
+2. Tests must be as decoupled from system as possible.
+
+1. during TDD production code becomes only more generic (never more specific) and tests become more specific (more detailed)
+2. Avoid GOLD - tests should avoid "central behaviour" for as long as possible.

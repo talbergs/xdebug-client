@@ -18,14 +18,8 @@ class InitRequest
         $this->language = $language;
     }
 
-    public static function fromXMLString($str)
+    public static function fromXML($xml)
     {
-        $xml = simplexml_load_string($str);
-
-        foreach ($xml->getDocNamespaces() as $prefix => $ns) {
-            $xml->registerXPathNamespace($prefix ?: 'a', $ns);
-        }
-
         return new self(
             $xml->xpath('/a:init/@fileuri')[0],
             $xml->xpath('/a:init/@idekey')[0],
@@ -34,5 +28,16 @@ class InitRequest
             $xml->xpath('/a:init/@appid')[0],
             $xml->xpath('/a:init/@language')[0]
         );
+    }
+
+    public static function fromXMLString($str)
+    {
+        $xml = simplexml_load_string($str);
+
+        foreach ($xml->getDocNamespaces() as $prefix => $ns) {
+            $xml->registerXPathNamespace($prefix ?: 'a', $ns);
+        }
+
+        return self::fromXML($xml);
     }
 }
