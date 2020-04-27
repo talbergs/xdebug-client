@@ -1,143 +1,258 @@
 #!/usr/bin/env php
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 require_once dirname(__FILE__) . '/bootstrap.php';
 
-if ($argc == 1) {
-    echo 'Usage' . PHP_EOL;
-    echo '--http-port 8080' . PHP_EOL;
-    echo '--xdebug-socket /tmp/xdebug.sock' . PHP_EOL;
-    exit;
-} else {
-    echo 'Listening for web connections on: 0.0.0.0:8080' . PHP_EOL;
-    echo 'Listening for xdebug connections on /tmp/xdebug.sock' . PHP_EOL;
-}
+$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+d($sock);
 
-pcntl_async_signals(true);
-pcntl_signal(SIGINT, function () {
-    file_exists('/tmp/xdebug.sock') && unlink('/tmp/xdebug.sock');
-    exit;
-});
+$reuse = socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
+d($reuse);
 
-pcntl_signal(SIGTERM, function () {
-    file_exists('/tmp/xdebug.sock') && unlink('/tmp/xdebug.sock');
-    exit;
-});
+$bind = socket_bind($sock, '0.0.0.0', 8080);
+d($bind);
 
-pcntl_signal(SIGHUP, function () {
-    file_exists('/tmp/xdebug.sock') && unlink('/tmp/xdebug.sock');
-    exit;
-});
+$listen = socket_listen($sock);
+d($listen);
 
-pcntl_signal(SIGQUIT, function () {
-    file_exists('/tmp/xdebug.sock') && unlink('/tmp/xdebug.sock');
-    exit;
-});
+$sock2 = socket_create(AF_UNIX, SOCK_STREAM, SOL_SOCKET);
+d($sock);
 
-// Used for testing.
-// The name of this signal is derived from "illegal instruction".
-// It usually means your program is trying to execute garbage or a privileged instruction.
-pcntl_signal(SIGILL, function () {
-    trigger_error('Simulated fatal error for testing purposes.', E_USER_ERROR);
-});
+@unlink('/tmp/xdebug.sock');
+$bind = socket_bind($sock2, '/tmp/xdebug.sock');
+d($bind);
 
+$listen = socket_listen($sock2);
+d($listen);
 
-register_shutdown_function(function () {
-    if (error_get_last()) {
-        file_exists('/tmp/xdebug.sock') && unlink('/tmp/xdebug.sock');
-    }
-});
+$sock3 = socket_create(AF_UNIX, SOCK_STREAM, SOL_SOCKET);
+d($sock);
 
+@unlink('/tmp/rpc.sock');
+$bind = socket_bind($sock3, '/tmp/rpc.sock');
+d($bind);
 
-    /* $host = '0.0.0.0'; */
-    /* $port = 8080; */
-    /* $main_socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP) or die("Cannot create socket.\n"); */
-    /* socket_bind($main_socket, $host, $port) or die("Could not bind to socket $host : $port.\n"); */
-    /* socket_listen($main_socket, 5) or die("Could not set up socket listener\n"); */
-/* $web_conn = $main_socket; */
-$web_conn = stream_socket_server("tcp://0.0.0.0:8080", $errno, $errstr);
-$web_session = null;
+$listen = socket_listen($sock3);
+d($listen);
 
-function newConn($sock) {
-    $sock = '/tmp/' . $sock;
-    $path = 'unix://' . $sock;
+$sock4 = socket_create(AF_UNIX, SOCK_STREAM, SOL_SOCKET);
+d($sock);
 
-    if (file_exists($sock)) {
-        unlink($sock);
+/* @unlink('/tmp/ipc2.sock'); */
+/* $bind = socket_bind($sock4, '/tmp/ipc2.sock'); */
+/* d($bind); */
+
+/* $listen = socket_listen($sock4); */
+/* d($listen); */
+
+trait ConnectionTrait
+{
+    protected $socket;
+    protected string $name;
+    protected array $clients = [];
+
+    protected function __construct(string $name, $socket)
+    {
+        $this->socket = $socket;
+        $this->name = $name;
     }
 
-    return stream_socket_server($path, $errno, $errstr);
-}
+    public function getMap(): array
+    {
+        $map = [];
 
-$xdebug_conn = newConn('xdebug.sock');
-$xdebug_session = null;
-
-// Used for tests - signal is sent when application is ready to accept connections.
-posix_kill(posix_getppid(), SIGALRM);
-
-while (true) {
-
-    $read = $except = $write = array_filter(compact(
-        'web_conn',
-        'web_session',
-        'xdebug_conn',
-        'xdebug_session',
-    ));
-
-    // @suppress PHP Warning:  stream_select(): unable to select [4]:
-    // Interrupted system call
-    @stream_select($write, $read, $except, 5, 5000000);
-    if (!array_keys($write)) {
-        continue;
-    }
-    /* usleep(1000); */
-
-    if (array_key_exists('xdebug_conn', $write)) {
-        $xdebug_session = stream_socket_accept($write['xdebug_conn'], 0);
-        echo "Xdebug just connected: " . stream_socket_get_name($xdebug_session, false) . PHP_EOL;
-        /* $xdebug_conn = null; */
-    }
-
-    if (array_key_exists('web_conn', $write)) {
-        $web_session = stream_socket_accept($write['web_conn']);
-        $response = new HTTPResponse();
-        $request = HTTPRequest::fromStream($web_session);
-
-        $response->setStatusCode(200);
-
-        if ($request->url === '/js.js') {
-            $response->setBody(file_get_contents('./src/js.js'));
-            fwrite($web_session, ''.$response);
-            fclose($web_session);
-        } else if ($request->isWebSocketHandshake()) {
-            $response->setStatusCode(101);
-            $response->setHeader('upgrade', 'websocket');
-            $response->setHeader('connection', 'upgrade');
-            $key = $request->getHeader('sec-websocket-key');
-            $acc = $key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-            $acc = base64_encode(sha1($acc, true));
-            $response->setBody("\r\n");
-            $response->setHeader('sec-websocket-accept', $acc);
-            fwrite($web_session, (string) $response);
-            $ws_conn = $web_session;
-            $web_session = null;
-        } else if ($request->url === '/favicon.ico') {
-            $response->setBody('https://github.com/rpsthecoder/square-loading-favicon');
-            fwrite($web_session, ''.$response);
-            fclose($web_session);
-        } else {
-            $response->setBody('<script src="js.js"></script>');
-            fwrite($web_session, ''.$response);
-            fclose($web_session);
+        foreach ($this->clients as $connection) {
+            $sock = $connection->getSocket();
+            $map['1:' . $this->name . ':' . (int) $sock] = $sock;
         }
 
-        $web_session = null;
+        $map['0:' . $this->name . ':' . (int) $this->socket] = $this->socket;
+
+        return $map;
     }
 
-    if (array_key_exists('xdebug_session', $write)) {
-        $req = XdebugRequest::buffer($xdebug_session);
-        d('XDEBUG.SENDS: ', $req);
+    public function read(string &$error = null): ?string
+    {
+        // TODO: exhaust it.
+        $len = socket_recv($this->socket, $buf, 2100, MSG_DONTWAIT);
+
+        if ($len === 0) {
+            $error = "Client left!";
+        } else if ($len === false) {
+            $error = "Some error!";
+        }
+
+        return $buf;
+    }
+
+    public function write()
+    {
+    }
+
+    public function removeById(int $id)
+    {
+        socket_close($this->clients[$id]->getSocket());
+        unset($this->clients[$id]);
+    }
+
+    public function getById(int $id): Connection
+    {
+        return $this->clients[$id];
+    }
+
+    public function accept()
+    {
+        $socket = socket_accept($this->socket);
+        $this->clients[(int) $socket] = new self($this->name, $socket);
+    }
+
+    public function getSocket()
+    {
+        return $this->socket;
+    }
+}
+
+interface Connection
+{
+    public function write();
+    public function getSocket();
+}
+
+class ConnectionUnix implements Connection
+{
+    use ConnectionTrait;
+
+    public static function new(string $name, string $sock_path)
+    {
+        $socket = socket_create(AF_UNIX, SOCK_STREAM, SOL_SOCKET);
+
+        @unlink($sock_path);
+        socket_bind($socket, $sock_path);
+        socket_listen($socket);
+
+        return new self($name, $socket);
+    }
+}
+
+class ConnectionInet implements Connection
+{
+    use ConnectionTrait;
+
+    public static function new(string $name, int $port): Connection
+    {
+        $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+
+        socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_bind($socket, '0.0.0.0', $port);
+        socket_listen($socket);
+
+        return new self($name, $socket);
+    }
+}
+
+/* class WebServer { */
+
+/*     public function __construct(Connection $connection) */
+/*     { */
+/*     } */
+
+/*     public function getConnections(): array */
+/*     { */
+/*         return [ */
+/*         ]; */
+/*     } */
+/* } */
+
+$web = ConnectionInet::new('web', 8082);
+/* $web = $web2->getSocket(); */
+
+$clients = [];
+$events = [];
+while (true) {
+    d('tick');
+    d($web);
+    d('tick');
+
+    $read = [
+        /* '0:web' => $sock, */
+        /* '0:web' => $web, */
+        '0:rpc' => $sock3,
+        '0:xdebug' => $sock2,
+    ] + $clients + $web->getMap();
+
+    $write = null;
+    $except = null;
+    socket_select($read, $write, $except, 5);
+
+    foreach ($read as $key => $s) {
+        d('=>' . $key);
+        list($alive, $domain) = explode(':', $key);
+        if ($alive) {
+            if ($domain === 'rpc') {
+                $len = socket_recv($s, $buf, 2100, MSG_DONTWAIT);
+                if ($len === 0) {
+                    echo "Client left!";
+                    socket_close($s);
+                    unset($clients[$key]);
+                } else {
+                    $bufsub = substr($buf, 0, 10);
+                    $events[] = "Alive connection wrote '{$len} {$bufsub}' at: " . $key;
+                }
+            } else if ($domain === 'web') {
+                $conn = $web->getById((int) $s);
+                $buf = $conn->read($error);
+
+                if ($error !== null) {
+                    $web->removeById((int) $s);
+                    $events[] = $error;
+                } else {
+                    $bufsub = substr($buf, 0, 10);
+                    $events[] = "Alive connection wrote '{$bufsub}' at: " . $key;
+                }
+
+                /* $len = socket_recv($s, $buf, 2100, MSG_DONTWAIT); */
+                /* if ($len === 0) { */
+                /*     echo "Client left!"; */
+                /*     socket_close($s); */
+                /*     unset($clients[$key]); */
+                /* } else { */
+                /*     $bufsub = substr($buf, 0, 10); */
+                /*     $events[] = "Alive connection wrote '{$len} {$bufsub}' at: " . $key; */
+                /* } */
+                /* socket_write($s, "aaa", 3); */
+                /* socket_close($s); */
+                /* unset($clients[$key]); */
+            } else if ($domain === 'xdebug') {
+                $len = socket_recv($s, $buf, 2100, MSG_DONTWAIT);
+                if ($len === 0) {
+                    echo "Client left!";
+                    socket_close($s);
+                    unset($clients[$key]);
+                } else {
+                    $bufsub = substr($buf, 0, 10);
+                    $events[] = "Alive connection wrote '{$len} {$bufsub}' at: " . $key;
+                }
+            }
+        } else {
+            if ($domain === 'rpc') {
+                $events[] = "Got RPC request.";
+                $ss = socket_accept($s);
+                $clients['1:rpc:' . (int) $ss] = $ss;
+            } else if ($domain === 'web') {
+                $events[] = "Got web request.";
+                $web->accept();
+            } else if ($domain === 'xdebug') {
+                $events[] = "Got xdebug request.";
+                $ss = socket_accept($s);
+                $clients['1:xdebug:' . (int) $ss] = $ss;
+            }
+        }
+    }
+
+    while ($event = array_pop($events)) {
+        /* d("BEGIN EVENT: $event"); */
+        /* sleep(1); */
+        /* d("END EVENT: $event"); */
+        d("RUN EVENT: $event");
     }
 }
