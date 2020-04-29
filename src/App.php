@@ -19,20 +19,27 @@ class App
 
     public function onHTTPRequest(ConnectionInterface $conn)
     {
-        $req = HTTPRequest::fromString($conn->read());
+        $tmp = $conn->read();
+        $req = HTTPRequest::fromString($tmp);
 
         $response = new HTTPResponse();
 
-        if ($req->isFileRequest()) {
+        if ($req->isWebSocketHandshake()) {
+            $response = HTTPResponse::handShakeResponse($req);
+            $response->setBody("\r\n");
+            $conn->write((string) $response);
+        } else if ($req->isFileRequest()) {
             $response->setStatusCode(200);
             $response->setBody(file_get_contents($req->getFilePath()));
+
+            $conn->write((string) $response);
+            $this->queue->push(new CloseConnectionEvent($conn));
         } else if ($req->isIndexRequest()) {
             $response->setStatusCode(200);
             $response->setBody(file_get_contents($req->getIndexFilePath()));
+
+            $conn->write((string) $response);
+            $this->queue->push(new CloseConnectionEvent($conn));
         }
-
-        $conn->write((string) $response);
-
-        $this->queue->push(new CloseConnectionEvent($conn));
     }
 }

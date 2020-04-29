@@ -9,6 +9,22 @@ class HTTPResponse
     public int $status_code = 200;
     public array $headers = [];
 
+    static function handShakeResponse(HTTPRequest $req): HTTPResponse
+    {
+        $res = new self;
+
+        $res->setStatusCode(101);
+        $res->setHeader('upgrade', 'websocket');
+        $res->setHeader('connection', 'upgrade');
+
+        $key = $req->getHeader('sec-websocket-key');
+        $acc = $key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+        $acc = base64_encode(sha1($acc, true));
+        $res->setHeader('sec-websocket-accept', $acc);
+
+        return $res;
+    }
+
     public function setStatusCode(int $code)
     {
         $this->status_code = $code;
