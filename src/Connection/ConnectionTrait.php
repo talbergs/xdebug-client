@@ -35,6 +35,13 @@ trait ConnectionTrait
         return $this->name;
     }
 
+    public function hasClient(): bool
+    {
+        $len = socket_recv($this->socket, $buf, 1, MSG_DONTWAIT | MSG_PEEK);
+
+        return $len != 0;
+    }
+
     public function read(string &$error = null): ?string
     {
         if (!$this->isLive()) {
@@ -53,10 +60,16 @@ trait ConnectionTrait
         return $buf;
     }
 
-    public function write()
+    public function write(string $str)
     {
         if (!$this->isLive()) {
             throw new \RuntimeException('Cannot write to a pending connection.');
+        }
+
+        $bytes_written = socket_write($this->socket, $str);
+
+        if ($bytes_written !== strlen($str)) {
+            throw new \RuntimeException('This is a TODO, you are welcome!');
         }
     }
 

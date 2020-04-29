@@ -7,7 +7,7 @@ class ConnectionHub
 {
     protected array $connections = [];
 
-    public function remove(ConnectionInterface $conn)
+    public function drop(ConnectionInterface $conn)
     {
         $connid = $this->getConnectionId($conn);
         $this->connections[$connid]->close();
