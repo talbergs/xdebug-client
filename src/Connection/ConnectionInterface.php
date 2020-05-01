@@ -9,6 +9,8 @@ interface ConnectionInterface
     public function getSocket();
     public function getResourceId(): int;
     public function getName(): string;
+    // BASICALLY THE NAME IS I/O PROTOCOL TYPE
+    public function setName(string $name);
     public function isLive(): bool;
     public function hasClient(): bool;
     public function accept(): ConnectionInterface;

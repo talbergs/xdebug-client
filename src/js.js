@@ -41,5 +41,12 @@ document.addEventListener("DOMContentLoaded", function() {
   button.onclick = function() {
     s.send(text.value)
   }
+
+  var button2 = document.createElement('button');
+  button.innerText = 'close';
+  document.body.append(button2)
+  button.onclick = function() {
+    s.close()
+  }
 });
 

@@ -3,7 +3,9 @@
 namespace Acme;
 
 use Acme\Connection\ConnectionInterface;
+use Acme\Connection\ConnectionWs;
 use Acme\Events\CloseConnectionEvent;
+use Acme\Events\SwitchConnectionEvent;
 use Acme\HTTP\HTTPRequest;
 use Acme\HTTP\HTTPResponse;
 use Ds\Queue;
@@ -20,14 +22,16 @@ class App
     public function onHTTPRequest(ConnectionInterface $conn)
     {
         $tmp = $conn->read();
+        d($tmp, $conn);
         $req = HTTPRequest::fromString($tmp);
 
         $response = new HTTPResponse();
 
         if ($req->isWebSocketHandshake()) {
             $response = HTTPResponse::handShakeResponse($req);
-            $response->setBody("\r\n");
-            $conn->write((string) $response);
+            $response->setBody('');
+            $conn->write((string) $response."\r\n");
+            $this->queue->push(new SwitchConnectionEvent($conn, ConnectionWs::fromInet($conn)));
         } else if ($req->isFileRequest()) {
             $response->setStatusCode(200);
             $response->setBody(file_get_contents($req->getFilePath()));

@@ -14,6 +14,21 @@ class ConnectionHub
         unset($this->connections[$connid]);
     }
 
+    public function switch(ConnectionInterface $from, ConnectionInterface $to)
+    {
+        unset($this->connections[$this->getConnectionId($from)]);
+        $this->connections[$this->getConnectionId($to)] = $to;
+    }
+
+    public function connectionsByName(string $name)
+    {
+        foreach ($this->connections as $conn) {
+            if ($conn->getName() == $name) {
+                yield $conn;
+            }
+        }
+    }
+
     public function add(ConnectionInterface $conn)
     {
         $this->connections[$this->getConnectionId($conn)] = $conn;

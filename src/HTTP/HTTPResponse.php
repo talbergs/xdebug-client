@@ -42,16 +42,18 @@ class HTTPResponse
 
     public function __toString(): string
     {
-        return implode("\r\n", [
-            $this->renderStatusLine(),
-            $this->renderHeaderFields(),
-            $this->renderBody(),
-        ]);
-    }
-
-    public function renderBody(): string
-    {
-        return $this->body ? "\r\n" . $this->body : '';
+        if ($this->body) {
+            return implode("\r\n", [
+                $this->renderStatusLine(),
+                $this->renderHeaderFields(),
+                $this->body,
+            ]);
+        } else {
+            return implode("\r\n", [
+                $this->renderStatusLine(),
+                $this->renderHeaderFields(),
+            ]) . "\r\n";
+        }
     }
 
     public function renderStatusLine(): string
