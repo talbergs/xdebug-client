@@ -34,6 +34,7 @@ class ConnectionXdebug implements ConnectionInterface
 
         $msg_len = '';
         $char = '';
+
         do {
             $msg_len .= $char;
             $len = socket_recv($this->socket, $char, 1, MSG_DONTWAIT);

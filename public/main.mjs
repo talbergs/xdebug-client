@@ -1,3 +1,10 @@
+import { example } from './modules/example.mjs';
+import state from './state.mjs';
+
+window.xx = state;
+console.log(state);
+console.log(example);
+
 document.addEventListener("DOMContentLoaded", function() {
   var status = document.createElement('div');
   var messages = document.createElement('ul');
@@ -6,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
   var s = new WebSocket('ws://localhost:8080');
   s.onopen = function (e) {
     status.innerText = 'CONNECTED!';
+    state.connected = true;
     console.log(e);
   }
   s.onclose = function (e) {

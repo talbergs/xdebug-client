@@ -22,7 +22,6 @@ class App
     public function onHTTPRequest(ConnectionInterface $conn)
     {
         $tmp = $conn->read();
-        d($tmp, $conn);
         $req = HTTPRequest::fromString($tmp);
 
         $response = new HTTPResponse();
@@ -34,7 +33,12 @@ class App
             $this->queue->push(new SwitchConnectionEvent($conn, ConnectionWs::fromInet($conn)));
         } else if ($req->isFileRequest()) {
             $response->setStatusCode(200);
-            $response->setBody(file_get_contents($req->getFilePath()));
+            // For ES modules to work, this is mandatory header.
+            if (preg_match('/.*\.mjs$/', $req->getFilePath())) {
+                $response->setHeader('content-type', 'text/javascript');
+            }
+            $contents = file_get_contents($req->getFilePath());
+            $response->setBody("\r\n" . $contents);
 
             $conn->write((string) $response);
             $this->queue->push(new CloseConnectionEvent($conn));
