@@ -2,6 +2,8 @@
 
 namespace Acme\Protocol;
 
+use Acme\Log;
+
 
 class CWsProtocol implements IProtocol
 {
@@ -24,11 +26,35 @@ class CWsProtocol implements IProtocol
         $len = socket_recv($resource, $data, $length, MSG_DONTWAIT);
 
         $data_unmasked = $data ^ str_pad('', $length, $masking_key, STR_PAD_RIGHT);
+        $data_unmasked = (string) $data_unmasked;
+
+        Log::log(__CLASS__.':'.__FUNCTION__);
+        Log::log($data_unmasked);
 
         return (string) $data_unmasked;
     }
 
+    public static function encode($text): string
+    {
+        // 0x1 text frame (FIN + opcode)
+        $b1 = 0x80 | (0x1 & 0x0f);
+        $length = strlen($text);
+
+        if($length <= 125)      $header = pack('CC', $b1, $length);     elseif($length > 125 && $length < 65536)        $header = pack('CCS', $b1, 126, $length);   elseif($length >= 65536)
+            $header = pack('CCN', $b1, 127, $length);
+
+        return $header.$text;
+    }
+
     public function write($resource, string $str)
     {
+        Log::log(__CLASS__.':'.__FUNCTION__);
+        Log::log($str);
+
+        $bytes_written = socket_write($resource, self::encode($str));
+
+        if ($bytes_written !== strlen($str)) {
+            throw new \RuntimeException('This is a TODO, you are welcome!');
+        }
     }
 }
