@@ -1,14 +1,9 @@
-import { example } from './modules/example.mjs';
-import state from './state.mjs';
-import * as favicon from './modules/favicon.mjs';
+// Create our shared stylesheet:
+const sheet = new CSSStyleSheet();
+sheet.replaceSync('* {border: darkseagreen; color: darkseagreen; background: teal}');
 
-favicon.waiting();
-
-window.xx = state;
-window.ff = favicon;
-
-console.log(state);
-console.log(example);
+// Apply the stylesheet to a document:
+document.adoptedStyleSheets = [sheet];
 
 document.addEventListener("DOMContentLoaded", function() {
   var status = document.createElement('div');
@@ -16,9 +11,16 @@ document.addEventListener("DOMContentLoaded", function() {
   document.body.append(status)
   document.body.append(messages)
   var s = new WebSocket('ws://localhost:8080');
+
+  status.innerText = {
+    [s.CONNECTING]: 'CONNECTING..',
+    [s.OPEN]: 'OPEN.',
+    [s.CLOSING]: 'CLOSING.',
+    [s.CLOSED]: 'CLOSED',
+  }[s.readyState];
+
   s.onopen = function (e) {
     status.innerText = 'CONNECTED!';
-    state.connected = true;
     console.log(e);
   }
   s.onclose = function (e) {
@@ -37,14 +39,14 @@ document.addEventListener("DOMContentLoaded", function() {
   document.body.append(text)
   document.body.append(button)
   button.onclick = function() {
-    favicon.inSession();
     s.send(text.value)
   }
 
   var button2 = document.createElement('button');
-  button2.innerText = 'close';
+  button.innerText = 'close';
   document.body.append(button2)
-  button2.onclick = function() {
+  button.onclick = function() {
     s.close()
   }
 });
+
