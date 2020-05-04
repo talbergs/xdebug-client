@@ -11,15 +11,7 @@
         "Acme\\": "src/"
       },
       "files": [
-        "./helpers.php",
-        "InitRequest.php",
-        "HTTPRequest.php",
-        "HTTPRequestHeader.php",
-        "HTTPRequestHeaderBag.php",
-        "HTTPResponse.php",
-        "WSFrameFragment.php",
-        "XdebugRequest.php",
-        "App.php"
+        "./helpers.php"
       ]
     },
     "require": {

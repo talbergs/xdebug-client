@@ -36,7 +36,7 @@ $hub->add($rpc);
 
 while (true) {
     echo 'tick-'.time().PHP_EOL;
-    d($hub);
+    /* d($hub); */
 
     foreach ($hub->selectDeviceActivity(150) as $deviceid) {
         $device = $hub->get($deviceid);

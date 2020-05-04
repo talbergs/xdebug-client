@@ -1,6 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
-class InitRequest
+namespace Acme\XDebugApp\Messages;
+
+
+class ErrorRequest implements IMessage
 {
     public function __construct(
         string $fileuri,
@@ -18,19 +21,19 @@ class InitRequest
         $this->language = $language;
     }
 
-    public static function fromXML($xml)
+    public static function fromXML(\SimpleXMLElement $xml): self
     {
         return new self(
-            $xml->xpath('/a:init/@fileuri')[0],
-            $xml->xpath('/a:init/@idekey')[0],
-            $xml->xpath('/a:init/a:engine/@version')[0],
-            $xml->xpath('/a:init/@protocol_version')[0],
-            $xml->xpath('/a:init/@appid')[0],
-            $xml->xpath('/a:init/@language')[0]
+            (string) $xml->xpath('/a:init/@fileuri')[0],
+            (string) $xml->xpath('/a:init/@idekey')[0],
+            (string) $xml->xpath('/a:init/a:engine/@version')[0],
+            (string) $xml->xpath('/a:init/@protocol_version')[0],
+            (string) $xml->xpath('/a:init/@appid')[0],
+            (string) $xml->xpath('/a:init/@language')[0]
         );
     }
 
-    public static function fromXMLString($str)
+    public static function fromXMLString($str): self
     {
         $xml = simplexml_load_string($str);
 

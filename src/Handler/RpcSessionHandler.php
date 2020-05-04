@@ -11,28 +11,39 @@ class RpcSessionHandler implements IHandler
     {
         $got = $device->getConnection()->read();
 
-        ob_start();
-        d($hub);
-        $device->getConnection()->write(ob_get_clean());
+        list($action, $message) = explode(':', $got);
+        $message = trim($message);
 
-        /* list($a, $m) = explode(':', $got); */
-        /* $m = trim($m); */
-        /* d("RPC: [$got] <<<<<<"); */
-        /* switch ($a) { */
-        /* case 'dump hub': d($hub);break; */
-        /* case 'x': */
-        /*     foreach ($hub->connectionsByName('xdb-session') as $conn) { */
-        /*         d($conn); */
-        /*         $conn->write($m); */
-        /*     } */
-        /*     break; */
-        /* case 'ws': */
-        /*     foreach ($hub->connectionsByName('ws') as $conn) { */
-        /*         $conn->write($m); */
-        /*     } */
-        /*     break; */
-        /* default: d("!! UNKNOWN ${got} RPC COMMAND !!"); */
-        /* } */
+        d("RPC: [$got] <<<<<<");
+
+        switch ($action) {
+            case 'hub': d($hub);break;
+            case 'xdd':
+                $xd_deviceids = $hub->devicesByHandler(XDebugSessionHandler::class);
+                d(compact('xd_deviceids', 'action', 'message'));
+                foreach ($xd_deviceids as $deviceid) {
+                    d($deviceid);
+                    $app = $hub->get($deviceid)->getHandler()->app;
+                    eval($message);
+                }
+                break;
+            case 'xd':
+                $xd_deviceids = $hub->devicesByHandler(XDebugSessionHandler::class);
+                d(compact('xd_deviceids', 'action', 'message'));
+                foreach ($xd_deviceids as $deviceid) {
+                    d($deviceid);
+                    $hub->get($deviceid)->getConnection()->write($message);
+                }
+                break;
+            case 'ws':
+                $ws_deviceids = $hub->devicesByHandler(WsSessionHandler::class);
+                d(compact('ws_deviceids', 'action', 'message'));
+                foreach ($ws_deviceids as $deviceid) {
+                    $hub->get($deviceid)->getConnection()->write($message);
+                }
+                break;
+            default: d("!! UNKNOWN ${got} RPC COMMAND !!");
+        }
 
         $hub->remove($device->getId());
     }

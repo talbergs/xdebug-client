@@ -2,6 +2,8 @@
 
 namespace Acme\Protocol;
 
+use Acme\Log;
+
 class XdbProtocol implements IProtocol
 {
     public function read($resource): string
@@ -24,11 +26,17 @@ class XdbProtocol implements IProtocol
         // Trailing "\x00" consumed.
         $len = socket_recv($resource, $_, 1, MSG_DONTWAIT);
 
+        Log::log(__CLASS__.':'.__FUNCTION__);
+        Log::log($str);
+
         return $str;
     }
 
     public function write($resource, string $str)
     {
+        Log::log(__CLASS__.':'.__FUNCTION__);
+        Log::log($str);
+
         $str = $str . "\x00";
         $bytes_written = socket_write($resource, $str);
 
