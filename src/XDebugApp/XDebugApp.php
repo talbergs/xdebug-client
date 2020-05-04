@@ -8,14 +8,14 @@ class XDebugApp
 {
     protected $transactions = [];
     protected $transaction_id = 0;
-    private $fileuri;
-    private $ideke;
-    private $engine_version;
-    private $protocol_version;
-    private $appid;
-    private $language;
-    private $handler;
-    private Idevice $device;
+    public $fileuri;
+    public $idekey;
+    public $engine_version;
+    public $protocol_version;
+    public $appid;
+    public $language;
+    public $handler;
+    public Idevice $device;
 
     public function __construct($handler)
     {
@@ -29,7 +29,7 @@ class XDebugApp
         }
 
         $this->fileuri = (string) $xml->xpath('/a:init/@fileuri')[0];
-        $this->ideke = (string) $xml->xpath('/a:init/@idekey')[0];
+        $this->idekey = (string) $xml->xpath('/a:init/@idekey')[0];
         $this->engine_version = (string) $xml->xpath('/a:init/a:engine/@version')[0];
         $this->protocol_version = (string) $xml->xpath('/a:init/@protocol_version')[0];
         $this->appid = (string) $xml->xpath('/a:init/@appid')[0];

@@ -32,6 +32,16 @@ class XDebugSessionHandler implements IHandler
         switch ($xml->getName()) {
         case 'init': # https://xdebug.org/docs/dbgp#connection-initialization
             $this->app->onInit($xml);
+            $hub->notifyFrontend(json_encode([
+                'init' => [
+                    'language' => $this->app->language,
+                    'idekey' => $this->app->idekey,
+                    'appid' => $this->app->appid,
+                    'engine_version' => $this->app->engine_version,
+                    'protocol_version' => $this->app->protocol_version,
+                    'fileuri' => $this->app->fileuri,
+                ]
+            ]));
             break;
         case 'response': # https://xdebug.org/docs/dbgp#response
             $this->app->onResponse($xml);

@@ -10,9 +10,17 @@ class WsSessionHandler implements IHandler
 {
     public function handle(IDevice $device, Hub $hub)
     {
+        $str = $device->getConnection()->read();
+
+        if ($str === '') {
+            d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' LEFT ');
+            $hub->remove($device->getId());
+            return;
+        }
+
         Log::log(__CLASS__.':'.__FUNCTION__);
 
-        d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' sent: ' . $device->getConnection()->read());
+        d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' sent: ' . $str);
         d('Nothing to do with that yet.');
     }
 }

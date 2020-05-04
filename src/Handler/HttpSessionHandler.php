@@ -15,8 +15,13 @@ class HttpSessionHandler implements IHandler
     {
         Log::log(__CLASS__.':'.__FUNCTION__);
 
-        $tmp = $device->getConnection()->read();
-        $req = HTTPRequest::fromString($tmp);
+        $str = $device->getConnection()->read();
+        if ($str === '') {
+            d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' LEFT ');
+            $hub->remove($device->getId());
+            return;
+        }
+        $req = HTTPRequest::fromString($str);
 
         $response = new HTTPResponse();
 

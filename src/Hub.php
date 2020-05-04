@@ -3,6 +3,7 @@
 namespace Acme;
 
 use Acme\Device\IDevice;
+use Acme\Handler\WsSessionHandler;
 
 
 class Hub
@@ -22,6 +23,14 @@ class Hub
     {
         $device->setId(count($this->devices));
         $this->devices[$device->getId()] = $device;
+    }
+
+    public function notifyFrontend(string $message)
+    {
+        $ws_deviceids = $this->devicesByHandler(WsSessionHandler::class);
+        foreach ($ws_deviceids as $deviceid) {
+            $this->get($deviceid)->getConnection()->write($message);
+        }
     }
 
     /**

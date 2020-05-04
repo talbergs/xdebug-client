@@ -1,4 +1,3 @@
-import { example } from './modules/example.mjs';
 import state from './state.mjs';
 import * as favicon from './modules/favicon.mjs';
 
@@ -8,9 +7,7 @@ window.xx = state;
 window.ff = favicon;
 
 console.log(state);
-console.log(example);
 
-document.addEventListener("DOMContentLoaded", function() {
   var status = document.createElement('div');
   var messages = document.createElement('ul');
   document.body.append(status)
@@ -47,4 +44,3 @@ document.addEventListener("DOMContentLoaded", function() {
   button2.onclick = function() {
     s.close()
   }
-});

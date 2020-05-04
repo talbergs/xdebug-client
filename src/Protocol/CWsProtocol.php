@@ -10,8 +10,17 @@ class CWsProtocol implements IProtocol
     public function read($resource): string
     {
         $len = socket_recv($resource, $byte1, 1, MSG_DONTWAIT);
+        if ($byte1 === null) {
+            return '';
+        }
+
+        /* d((ord($byte1) & 0b1), '<< IF IS FIN'); */
+
         // TODO: mask flag ... final flag .. opcode flag
         $len = socket_recv($resource, $byte2, 1, MSG_DONTWAIT);
+        if ($byte2 === null) {
+            return '';
+        }
 
         $length = ord($byte2) & 127;
         if ($length == 126) {
@@ -36,14 +45,15 @@ class CWsProtocol implements IProtocol
 
     public static function encode($text): string
     {
-        // 0x1 text frame (FIN + opcode)
-        $b1 = 0x80 | (0x1 & 0x0f);
-        $length = strlen($text);
-
-        if($length <= 125)      $header = pack('CC', $b1, $length);     elseif($length > 125 && $length < 65536)        $header = pack('CCS', $b1, 126, $length);   elseif($length >= 65536)
-            $header = pack('CCN', $b1, 127, $length);
-
-        return $header.$text;
+        $b = 129; // FIN + text frame
+		$len = strlen($text);
+		if ($len < 126) {
+			return pack('CC', $b, $len) . $text;
+		} else if ($len < 65536) {
+			return pack('CCn', $b, 126, $len) . $text;
+		} else {
+			return pack('CCNN', $b, 127, 0, $len) . $text;
+		}
     }
 
     public function write($resource, string $str)
@@ -51,10 +61,15 @@ class CWsProtocol implements IProtocol
         Log::log(__CLASS__.':'.__FUNCTION__);
         Log::log($str);
 
-        $bytes_written = socket_write($resource, self::encode($str));
+        $str = self::encode($str);
+        $bytes_written = socket_write($resource, $str);
+        if ($bytes_written === false) {
+            throw new \RuntimeException('Network error or what..');
+        }
 
         if ($bytes_written !== strlen($str)) {
             throw new \RuntimeException('This is a TODO, you are welcome!');
         }
+        d('DONE?');
     }
 }
