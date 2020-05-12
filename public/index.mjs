@@ -1,12 +1,23 @@
-import state from './state.mjs';
-import * as favicon from './modules/favicon.mjs';
+import {bind, state} from './mjs/state/index.mjs';
+import Theme from './mjs/theme.mjs';
+import Ws from './mjs/ws.mjs';
+import * as favicon from './mjs/favicon.mjs';
+
+bind('.lvl1.lvl2', ctx => {
+  console.log('lvl1.lvl2', ctx, '++++_')
+});
+ 
+window.state = state
+Object.assign(state, {lvl1: {lvl2: 'k2k'}})
+
+Theme.check();
 
 favicon.waiting();
 
-window.xx = state;
+window.Theme = Theme;
 window.ff = favicon;
 
-console.log(state);
+// console.log(state);
 
   var status = document.createElement('div');
   var messages = document.createElement('ul');
@@ -14,8 +25,8 @@ console.log(state);
   document.body.append(messages)
   var s = new WebSocket('ws://localhost:8080');
   s.onopen = function (e) {
-    status.innerText = 'CONNECTED!';
-    state.connected = true;
+    status.innerText = 'Connected!';
+    // state.connected = true;
     console.log(e);
   }
   s.onclose = function (e) {

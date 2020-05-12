@@ -1,0 +1,28 @@
+@import "css/scheme.css";
+
+body {
+  background: var(--clr-bg);
+  color: var(--clr-fg);
+  transition: background cubic-bezier(0.77, 0, 0.175, 1) .2s;
+  font-family: 'EB Garamond', serif;
+  font-size: 1.2em;
+}
+
+::selection {
+  color: var(--clr-accent);
+  background: var(--clr-fg);
+}
+
+input, button {
+  background: var(--clr-bg);
+  border: none;
+  border-bottom: var(--clr-fg) solid 1px;
+  color: var(--clr-fg);
+  padding: .2em;
+  outline: none;
+  caret-color: var(--clr-accent);
+}
+
+button:focus {
+  color: var(--clr-accent);
+}

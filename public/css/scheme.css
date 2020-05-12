@@ -1,0 +1,25 @@
+:root {
+  --clr-accent: hotpink;
+  --clr-bg: #333333;
+  --clr-fg: #999999;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --clr-accent: darkviolet;
+    --clr-fg: #333333;
+    --clr-bg: #999999;
+  }
+}
+
+.theme-dark {
+  --clr-accent: hotpink;
+  --clr-bg: #333333;
+  --clr-fg: #999999;
+}
+
+.theme-light {
+  --clr-accent: darkviolet;
+  --clr-fg: #333333;
+  --clr-bg: #999999;
+}
