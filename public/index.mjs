@@ -7,11 +7,7 @@ bind('.lvl1.lvl2', ctx => {
   console.log('lvl1.lvl2', ctx, '++++_')
 });
  
-window.state = state
-Object.assign(state, {lvl1: {lvl2: 'k2k'}})
-
 Theme.check();
-
 favicon.waiting();
 
 window.Theme = Theme;
