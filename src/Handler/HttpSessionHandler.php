@@ -39,6 +39,8 @@ class HttpSessionHandler implements IHandler
             // For ES modules to work, this is mandatory header.
             if (preg_match('/.*\.mjs$/', $req->getFilePath())) {
                 $response->setHeader('content-type', 'text/javascript');
+            } else if (preg_match('/.*\.css$/', $req->getFilePath())) {
+                $response->setHeader('content-type', 'text/css');
             }
             $contents = file_get_contents($req->getFilePath());
             $response->setBody("\r\n" . $contents);

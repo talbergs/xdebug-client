@@ -10,7 +10,7 @@ function mkHandler(path) {
     set(obj, prop, value) {
       if (typeof obj[prop] == 'object') {
         if (typeof value != 'object') {
-          throw `Unmatched types: ${prop}`;
+          throw `Unmatched types: ${this.path}.${prop}`;
         }
         Object.assign(obj[prop], value);
       } else if (typeof obj[prop] == 'undefined') {
@@ -28,15 +28,12 @@ function mkHandler(path) {
 
 const proxify = (obj, path = '', proxied = {}) => {
   for (let prop in obj) {
-    if (typeof obj[prop] == 'object') {
-      proxied[prop] = proxify(obj[prop], `${path}.${prop}`);
-    } else {
-      proxied[prop] = obj[prop];
-    }
+    proxied[prop] = typeof obj[prop] == 'object'
+      ? proxify(obj[prop], `${path}.${prop}`)
+      : obj[prop];
   }
 
   return new Proxy(proxied, mkHandler(path));
 };
 
 export default proxify(default_state);
-

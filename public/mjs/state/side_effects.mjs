@@ -3,17 +3,18 @@ export default new class SideEffects {
     this.side_effects = {};
   }
 
-  bind(path, cb) {
+  getPathSideEffects(path) {
     if (!this.side_effects[path]) {
       this.side_effects[path] = [];
     }
-    this.side_effects[path].push(cb);
+    return this.side_effects[path];
+  }
+
+  bind(path, cb) {
+    this.getPathSideEffects(path).push(cb);
   }
 
   call(path, ctx) {
-    console.log(path, this.side_effects)
-    if (this.side_effects[path]) {
-      this.side_effects[path].forEach(cb => cb(ctx))
-    }
+    this.getPathSideEffects(path).forEach(cb => cb(ctx))
   }
 }
