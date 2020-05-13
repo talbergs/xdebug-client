@@ -1,28 +1,23 @@
-export default class Theme {
+const ws = new WebSocket('ws://localhost:8080');
+const onopen = [];
+const onclose = [];
+const onmessage = [];
 
-  static themes = ['theme-light', 'theme-dark'];
+ws.onopen = () => onopen.forEach(cb => cb());
+ws.onclose = () => onclose.forEach(cb => cb());
+ws.onmessage = e => onmessage.forEach(cb => cb(e));
 
-  static get() {
-    return localStorage.getItem('theme');
-  }
-
-  static set(theme) {
-    if (!this.themes.includes(theme)) {
-      throw `Unknown theme given: ${theme}`;
-    }
-
-    this.clear();
-
-    localStorage.setItem('theme', theme);
-    document.body.classList.add(theme);
-  }
-
-  static clear() {
-    localStorage.removeItem('theme');
-    this.themes.forEach(theme => document.body.classList.remove(theme));
-  }
-
-  static check() {
-    this.get() && this.set(this.get());
-  }
+export default {
+  onopen: cb => {
+    ws.readyState === ws.OPEN && cb();
+    onopen.push(cb);
+  },
+  onclose: cb => {
+    ws.readyState === ws.CLOSED && cb();
+    onclose.push(cb);
+  },
+  onmessage: cb => onmessage.push(cb),
+  send: json => ws.send(json),
+  close: () => ws.close(),
+  ws,
 }

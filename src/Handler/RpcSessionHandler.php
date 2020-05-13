@@ -11,8 +11,9 @@ class RpcSessionHandler implements IHandler
     {
         $got = $device->getConnection()->read();
 
-        list($action, $message) = explode(':', $got);
-        $message = trim($message);
+        $pts = explode(':', $got);
+        $action = array_shift($pts);
+        $message = trim(implode(':', $pts));
 
         d("RPC: [$got] <<<<<<");
 

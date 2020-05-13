@@ -18,6 +18,14 @@ class WsSessionHandler implements IHandler
             return;
         }
 
+        if ($str === 'app:state') {
+            $hub->notifyFrontend(json_encode([
+                'lvl1' => [
+                    'lvl2' => time(),
+                ],
+            ]));
+        }
+
         Log::log(__CLASS__.':'.__FUNCTION__);
 
         d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' sent: ' . $str);
