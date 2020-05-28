@@ -19,16 +19,30 @@ class WsSessionHandler implements IHandler
         }
 
         if ($str === 'app:state') {
-            $hub->notifyFrontend(json_encode([
-                'lvl1' => [
-                    'lvl2' => time(),
-                ],
-            ]));
+            $hub->notifyFrontend(json_encode($hub->getState()->getFullState()));
+        }
+
+        if ($str === 'app:files') {
+
+            $files = [];
+            $directories = [];
+            $path = '/';
+            $dir = dir($path);
+            while (false !== ($entry = $dir->read())) {
+                if (is_dir("{$path}{$entry}")) {
+                    $directories[] = ['name' => $entry . '/'];
+                } else {
+                    $files[] = ['name' => $entry];
+                }
+            }
+            $dir->close();
+
+            usort($directories, fn($a, $b) => $a['name'] <=> $b['name']);
+            usort($files, fn($a, $b) => $a['name'] <=> $b['name']);
+            $entries = array_merge($directories, $files);
+            $hub->notifyFrontend(json_encode(['files' => $entries]));
         }
 
         Log::log(__CLASS__.':'.__FUNCTION__);
-
-        d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' sent: ' . $str);
-        d('Nothing to do with that yet.');
     }
 }

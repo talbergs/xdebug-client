@@ -1,4 +1,5 @@
 @import "css/scheme.css";
+@import "css/layout.css";
 
 body {
   background: var(--clr-bg);
@@ -21,8 +22,17 @@ input, button {
   padding: .2em;
   outline: none;
   caret-color: var(--clr-accent);
+  transition: background cubic-bezier(0.77, 0, 0.175, 1) .2s;
 }
 
 button:focus {
   color: var(--clr-accent);
+}
+
+button:active {
+  font-style: italic;
+}
+
+button:hover {
+  border-bottom: var(--clr-accent) solid 1px;
 }

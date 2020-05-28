@@ -17,6 +17,14 @@ export default class Theme {
     document.body.classList.add(theme);
   }
 
+  static first() {
+    return this.themes[0];
+  }
+
+  static rotate() {
+    this.themes.push(this.themes.shift());
+  }
+
   static clear() {
     localStorage.removeItem('theme');
     this.themes.forEach(theme => document.body.classList.remove(theme));

@@ -1,8 +1,17 @@
-export default {
-  lvl1: {
-    lvl2: '2',
-    lvl22: {
-      lvl3: 88
+/*
+This is generated file, do not edit!
+JS object notation parser is faster than parsing actual JS object.
+Pretty view:
+{
+    "xdebug": {
+        "language": "",
+        "idekey": "",
+        "appid": "",
+        "engine_version": "",
+        "fileuri": "",
+        "protocol_version": ""
     },
-  }
-};
+    "files": []
+}
+*/
+export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[]}');

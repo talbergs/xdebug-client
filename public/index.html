@@ -9,15 +9,21 @@
     <script type="module" src="index.mjs"></script>
   </head>
   <body>
-      <section>
-          <label for="root://">root://</label>
-          <input type="text" name="root://" value="" id="root://">
-      </section>
-      <section>
-          <div>code</textarea>
-      </section>
-      <section>
-          <div id="aa">filetree</div>
-      </section>
+    <div id="app">
+        <section id="filetree">
+            <ul>
+                <li v-for="file in files" :key="file.name">{{ file.name }}</li>
+            </ul>
+        </section>
+
+        <section id="controls">
+            <button v-on:click="theme_light">theme light</button>
+            <button v-on:click="theme_dark">theme dark</button>
+            <button v-on:click="ws('app:state')">ws app:state</button>
+            <button v-on:click="ws('app:files')">ws app:files</button>
+            <button v-on:click="icon_on">icon on</button>
+            <button v-on:click="icon_off">icon off</button>
+        </section>
+    </div>
   </body>
 </html>

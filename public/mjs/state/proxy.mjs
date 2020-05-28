@@ -8,6 +8,14 @@ function mkHandler(path) {
       return obj[prop];
     },
     set(obj, prop, value) {
+      if (Array.isArray(value)) {
+        const arrobj = {};
+        value.forEach((el, i) => arrobj[i] = el);
+        Object.assign(obj[prop], arrobj);
+
+        return true;
+      }
+
       if (typeof obj[prop] == 'object') {
         if (typeof value != 'object') {
           throw `Unmatched types: ${this.path}.${prop}`;
@@ -28,6 +36,14 @@ function mkHandler(path) {
 
 const proxify = (obj, path = '', proxied = {}) => {
   for (let prop in obj) {
+    if (Array.isArray(obj[prop])) {
+      proxied[prop] = [];
+      for (let i in obj[prop]) {
+        proxied[prop].push(proxify(obj[prop][i], `whatewer`));
+      }
+      continue;
+    }
+
     proxied[prop] = typeof obj[prop] == 'object'
       ? proxify(obj[prop], `${path}.${prop}`)
       : obj[prop];

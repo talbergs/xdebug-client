@@ -4,6 +4,7 @@ namespace Acme;
 
 use Acme\Device\IDevice;
 use Acme\Handler\WsSessionHandler;
+use Acme\State\State;
 
 
 class Hub
@@ -12,6 +13,19 @@ class Hub
      * @var IDevice[]
      */
     protected array $devices = [];
+
+    /**
+     * WRONG!!!
+     */
+    protected State $state;
+    public function getState(): State
+    {
+        return $this->state;
+    }
+    public function setState(State $state)
+    {
+        $this->state = $state;
+    }
 
     public function remove(int $id)
     {

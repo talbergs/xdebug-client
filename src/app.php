@@ -12,6 +12,7 @@ use Acme\Hub;
 use Acme\Protocol\HttpProtocol;
 use Acme\Protocol\RpcProtocol;
 use Acme\Protocol\XdbProtocol;
+use Acme\State\State;
 use Acme\Log;
 
 Log::setLogFile('/tmp/app.log');
@@ -33,6 +34,9 @@ $xdb_conn->setProtocol(new RpcProtocol());
 $rpc = new Device($rpc_conn, new RpcAcceptHandler());
 $hub->add($rpc);
 
+$state = new State();
+$state->generateJsState(__DIR__ . '/../public/mjs/state/default.mjs');
+$hub->setState($state);
 
 while (true) {
     echo 'tick-'.time().PHP_EOL;
