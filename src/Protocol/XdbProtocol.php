@@ -2,6 +2,7 @@
 
 namespace Acme\Protocol;
 
+use Acme\Exceptions\XDebugClientLeft;
 use Acme\Log;
 
 class XdbProtocol implements IProtocol
@@ -16,7 +17,7 @@ class XdbProtocol implements IProtocol
             $len = socket_recv($resource, $char, 1, MSG_DONTWAIT);
 
             if ($len != 1) {
-                throw new \RuntimeException('Xdebug client just left.');
+                throw new XDebugClientLeft;
             }
 
         } while ($char !== "\x00");

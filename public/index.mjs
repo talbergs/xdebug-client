@@ -4,8 +4,6 @@ import Theme from './mjs/theme.mjs';
 import Ws from './mjs/ws.mjs';
 import * as favicon from './mjs/favicon.mjs';
 
-Ws.onopen(_ => Ws.send('app:state'));
-Ws.onmessage(msg => app.extend(JSON.parse(msg.data)));
 
 Theme.check();
 favicon.waiting();
@@ -13,13 +11,31 @@ favicon.waiting();
 window.app = new Vue({
   el: '#app',
   data: Object.assign(data, {
-    path_remap: ''
+    path_remap: '',
+    view: '',
+    ws_connedted: false,
   }),
   computed: {
-    xdebug_session_status() {
+    in_xdebub_session() {
+      return this.xdebug.appid != '';
     },
   },
   methods: {
+    exit_session() {
+      alert("exit");
+    },
+    app_view_session() {
+      this.view = 'session'
+    },
+    app_view_code() {
+      this.view = 'code'
+    },
+    app_view_filetree() {
+      this.view = 'filetree'
+    },
+    app_view_settings() {
+      this.view = 'settings'
+    },
     icon_off() {
       favicon.waiting();
     },
@@ -43,6 +59,16 @@ window.app = new Vue({
     },
   }
 });
+
+Ws.onopen(_ => {
+  Ws.send('app:state');
+  app.$data.ws_connedted = true;
+});
+
+Ws.onclose(_ => {
+  app.$data.ws_connedted = false;
+});
+Ws.onmessage(msg => app.extend(JSON.parse(msg.data)));
 
 window.Ws = Ws;
 window.Theme = Theme;

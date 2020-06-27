@@ -12,6 +12,5 @@ interface IConnection
     public function setProtocol(IProtocol $protocol);
     public function accept(): IConnection;
     public function getResource();
-    public function peekRead(): bool;
     public function close();
 }

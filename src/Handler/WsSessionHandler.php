@@ -18,6 +18,67 @@ class WsSessionHandler implements IHandler
             return;
         }
 
+        if ($str === 'xdebug:source') {
+            $xdebug_app = $hub->getXDebugApp();
+            $transaction_id = $xdebug_app->cmdSource();
+            $xdebug_app->addCallback($transaction_id, function($xml) {
+                d('----', $xml, '----', $this);
+            });
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'xdebug:breakpoint_list') {
+            $xdebug_app = $hub->getXDebugApp();
+            $xdebug_app->cmdBreakpointList();
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'xdebug:breakpoint_set') {
+            $xdebug_app = $hub->getXDebugApp();
+            $transaction_id = $xdebug_app->cmdBreakpointSet(
+                'file:///home/ada/xdebug-client/example-page.php',
+                5
+            );
+            $xdebug_app->addCallback($transaction_id, function($xml) {
+                d('----', $xml, '----', $this);
+            });
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'xdebug:run') {
+            $xdebug_app = $hub->getXDebugApp();
+            $xdebug_app->cmdRun();
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'xdebug:status') {
+            $xdebug_app = $hub->getXDebugApp();
+            $transaction_id = $xdebug_app->cmdStatus();
+            $xdebug_app->addCallback($transaction_id, function($xml) use ($hub) {
+                d('----', $xml, '----', $this);
+                $hub->getState()->setState('engine.status', 32);
+                $hub->notifyFrontend(json_encode($hub->getState()->getFullState()));
+            });
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'xdebug:stack_get') {
+            $xdebug_app = $hub->getXDebugApp();
+            $xdebug_app->cmdStackGet();
+            $xdebug_app->commit();
+        }
+
+        if ($str === 'exit:session') {
+            $xdebug_app = $hub->getXDebugApp();
+            $transaction_id = $xdebug_app->cmdStop();
+            $xdebug_app->addCallback($transaction_id, function($xml) use ($hub, $xdebug_app) {
+                d('>>>>>>>>', $xml, '<<<<<<', $this);
+                $hub->remove($xdebug_app->getDevice()->getId());
+                $xdebug_app->appid = null;
+            });
+            $xdebug_app->commit();
+        }
+
         if ($str === 'app:state') {
             $hub->notifyFrontend(json_encode($hub->getState()->getFullState()));
         }

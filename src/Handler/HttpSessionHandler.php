@@ -31,7 +31,6 @@ class HttpSessionHandler implements IHandler
             $response = HTTPResponse::handShakeResponse($req);
             $response->setBody('');
             $conn->write((string) $response."\r\n");
-            /* $this->queue->push(new SwitchConnectionEvent($conn, ConnectionWs::fromInet($conn))); */
             $conn->setProtocol(new CWsProtocol());
             $device->setHandler(new WsSessionHandler());
         } else if ($req->isFileRequest()) {
@@ -46,14 +45,12 @@ class HttpSessionHandler implements IHandler
             $response->setBody("\r\n" . $contents);
 
             $conn->write((string) $response);
-            /* $this->queue->push(new CloseConnectionEvent($conn)); */
             $hub->remove($device->getId());
         } else if ($req->isIndexRequest()) {
             $response->setStatusCode(200);
             $response->setBody(file_get_contents($req->getIndexFilePath()));
 
             $conn->write((string) $response);
-            /* $this->queue->push(new CloseConnectionEvent($conn)); */
             $hub->remove($device->getId());
         }
     }

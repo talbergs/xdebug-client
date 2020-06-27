@@ -44,13 +44,6 @@ final class CConnection implements IConnection
         return new self($resource, $this->protocol);
     }
 
-    public function peekRead(): bool
-    {
-        $len = socket_recv($this->resource, $buf, 1, MSG_DONTWAIT | MSG_PEEK);
-
-        return $len != 0;
-    }
-
     public static function inet(int $port): IConnection
     {
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);

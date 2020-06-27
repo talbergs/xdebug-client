@@ -1,0 +1,4 @@
+in session state?
+    Y: can commit session commands
+    Y: can commit app commands
+    N: can commit app commands

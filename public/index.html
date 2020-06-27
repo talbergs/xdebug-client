@@ -5,24 +5,95 @@
     <link rel="icon">
     <link rel="stylesheet" href="index.css">
     <link href="https://fonts.googleapis.com/css?family=EB+Garamond&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title>Xdebug Ide</title>
     <script type="module" src="index.mjs"></script>
   </head>
   <body>
     <div id="app">
-        <section id="filetree">
-            <ul>
-                <li v-for="file in files" :key="file.name">{{ file.name }}</li>
-            </ul>
+
+        <section id="right-side">
+
+            <section v-if="view == 'session'" id="session">
+                <div style="display: grid; grid-template-columns: auto auto;">
+
+                    <label>fileuri</label>
+                    <div>{{xdebug.fileuri}}</div>
+
+                    <label>engine version</label>
+                    <div>{{xdebug.engine_version}}</div>
+                </div>
+
+                <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button>
+                <button v-on:click="ws('xdebug:source')">ws xdebug:source</button>
+            </section>
+
+            <section v-if="view == 'code'" id="code">
+                <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button>
+                <button v-on:click="ws('xdebug:source')">ws xdebug:source</button>
+                <button v-on:click="ws('xdebug:status')">ws xdebug:status</button>
+                <button v-on:click="ws('xdebug:run')">ws xdebug:run</button>
+                <button v-on:click="ws('xdebug:breakpoint_set')">ws xdebug:breakpoint_set</button>
+                <button v-on:click="ws('xdebug:breakpoint_list')">ws xdebug:breakpoint_list</button>
+            </section>
+
+            <section v-if="view == 'settings'" id="settings">
+                <button v-on:click="theme_light">theme light</button>
+                <button v-on:click="theme_dark">theme dark</button>
+            </section>
+
+            <section v-if="view == 'filetree'" id="filetree">
+                <ul>
+                    <li v-for="file in files" :key="file.name">{{ file.name }}</li>
+                </ul>
+            </section>
+
         </section>
 
         <section id="controls">
-            <button v-on:click="theme_light">theme light</button>
-            <button v-on:click="theme_dark">theme dark</button>
+
+            <button v-on:click="app_view_session">
+                <i class="material-icons">insights</i>
+                <span>Session</span>
+            </button>
+
+            <button v-on:click="app_view_settings">
+                <i class="material-icons">settings</i>
+                <span>Settings</span>
+            </button>
+
+            <button v-on:click="app_view_filetree">
+                <i class="material-icons">folder</i>
+                <span>Files</span>
+            </button>
+
+            <button v-on:click="app_view_filetree">
+                <i class="material-icons">bug_report</i>
+                <span>Debug</span>
+            </button>
+
+            <button v-on:click="app_view_code">
+                <i class="material-icons">code</i>
+                <span>Sources</span>
+            </button>
+
+
             <button v-on:click="ws('app:state')">ws app:state</button>
             <button v-on:click="ws('app:files')">ws app:files</button>
             <button v-on:click="icon_on">icon on</button>
             <button v-on:click="icon_off">icon off</button>
+        </section>
+
+        <section id="statusbar">
+            <button v-if="ws_connedted" v-on:click="ws('exit:session')">
+                <i class="material-icons">wifi</i>
+            </button>
+            <i v-else class="material-icons">wifi_off</i>
+
+            <button v-if="in_xdebub_session" v-on:click="ws('exit:session')">
+                <i class="material-icons">power_settings_new</i>
+            </button>
+            <i v-else class="material-icons">power_off</i>
         </section>
     </div>
   </body>

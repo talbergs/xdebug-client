@@ -7,9 +7,11 @@ class XDebugTransaction
 
     private string $id;
 
-    private array $args;
+    private array $args = [];
 
     private string $cmd;
+
+    private string $data = '';
 
 
     public function setId($id)
@@ -20,6 +22,11 @@ class XDebugTransaction
     public function getId(): string
     {
         return $this->id;
+    }
+
+    public function setData(string $data)
+    {
+        $this->data = $data;
     }
 
     public function setArgs(array $args)
@@ -39,6 +46,12 @@ class XDebugTransaction
         $args[] = '-i';
         $args[] = $this->id;
 
-        return $this->cmd . ' ' . implode(' ', $args);
+        $cmd = $this->cmd . ' ' . implode(' ', $args);
+
+        if ($this->data) {
+            $cmd .= ' -- ' . base64_encode($this->data);
+        }
+
+        return $cmd;
     }
 }

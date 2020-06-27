@@ -5,6 +5,7 @@ namespace Acme;
 use Acme\Device\IDevice;
 use Acme\Handler\WsSessionHandler;
 use Acme\State\State;
+use Acme\XDebugApp\XDebugApp;
 
 
 class Hub
@@ -13,6 +14,12 @@ class Hub
      * @var IDevice[]
      */
     protected array $devices = [];
+    protected XDebugApp $xdebug_app;
+
+    public function __construct(XDebugApp $xdebug_app)
+    {
+        $this->xdebug_app = $xdebug_app;
+    }
 
     /**
      * WRONG!!!
@@ -84,5 +91,10 @@ class Hub
     public function get(int $id): IDevice
     {
         return $this->devices[$id];;
+    }
+
+    public function getXDebugApp(): XDebugApp
+    {
+        return $this->xdebug_app;
     }
 }

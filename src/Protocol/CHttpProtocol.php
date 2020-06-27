@@ -4,7 +4,7 @@ namespace Acme\Protocol;
 
 use Acme\Log;
 
-class HttpProtocol implements IProtocol
+class CHttpProtocol implements IProtocol
 {
     public function read($resource): string
     {

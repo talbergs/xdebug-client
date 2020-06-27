@@ -7,6 +7,7 @@ use Acme\Device\IDevice;
 class XDebugApp
 {
     protected $transactions = [];
+    protected $callbacks = [];
     protected $transaction_id = 0;
     public $fileuri;
     public $idekey;
@@ -14,13 +15,7 @@ class XDebugApp
     public $protocol_version;
     public $appid;
     public $language;
-    public $handler;
     public Idevice $device;
-
-    public function __construct($handler)
-    {
-        $this->handler = $handler;
-    }
 
     public function onInit(\SimpleXMLElement $xml)
     {
@@ -43,7 +38,31 @@ class XDebugApp
         }
 
         d($this->transactions[$xml->attributes()->transaction_id . ''], "<< response on", $this, $xml);
-        unset($this->transactions[$xml->attributes()->transaction_id . '']);
+
+        switch ($xml->attributes()->command) {
+        case 'source':
+            $source = base64_decode((string) $xml);
+            d($source);
+        break;
+        case 'stack_get':
+        break;
+        case 'stop':
+        break;
+        /* default: throw new \RuntimeException("Not implemented:"); */
+        }
+
+        $transaction_id = $xml->attributes()->transaction_id . '';
+        unset($this->transactions[$transaction_id]);
+
+        if (array_key_exists($transaction_id, $this->callbacks)) {
+            $this->callbacks[$transaction_id]($xml);
+            unset($this->callbacks[$transaction_id]);
+        }
+    }
+
+    public function addCallback(string $transaction_id, callable $callback)
+    {
+        $this->callbacks[$transaction_id] = $callback;
     }
 
     # https://xdebug.org/docs/dbgp#status
@@ -64,6 +83,21 @@ class XDebugApp
         $this->transactions[$this->transaction_id] = $this->cmd('feature_set', ['-n', $feature_name, '-v', $value]);
     }
 
+    /**
+     * The status command is a simple way for the IDE to find out from the debugger engine whether execution may be
+     * continued or not. No body is required on request. If async support has been negotiated using feature_get/set
+     * the status command may be sent while the debugger engine is in a 'run state'.
+     *
+     * https://xdebug.org/docs/dbgp#status
+     */
+    public function cmdStatus(): string
+    {
+        $transaction = $this->cmd('status');
+        $this->transactions[$transaction->getId()] = $transaction;
+
+        return $transaction->getId();
+    }
+    
     # https://xdebug.org/docs/dbgp#status
     public function cmdFeatureGet(string $feature_name)
     {
@@ -105,7 +139,11 @@ class XDebugApp
     /*======================================*/
     /*===    continuation commands  ========*/
     /*======================================*/
-    /* starts or resumes the script until a new breakpoint is reached, or the end of the script is reached. */
+
+    /** 
+     * Starts or resumes the script until a new breakpoint is reached,
+     * or the end of the script is reached.
+     */
     public function cmdRun()
     {
         $transaction = $this->cmd('run');
@@ -118,7 +156,7 @@ class XDebugApp
         $transaction = $this->cmd('step_into');
         $this->transactions[$transaction->getId()] = $transaction;
     }
-    
+
     /* steps to the next statement, if there is a function call on the line from which the step_over is issued then the debugger engine will stop at the statement after the function call in the same scope as from where the command was issued */
     public function cmdStepOver()
     {
@@ -133,14 +171,38 @@ class XDebugApp
         $this->transactions[$transaction->getId()] = $transaction;
     }
 
-    /* ends execution of the script immediately, the debugger engine may not respond, though if possible should be designed to do so. The script will be terminated right away and be followed by a disconnection of the network connection from the IDE (and debugger engine if required in multi request apache processes). */
-    public function cmdStop()
+    /**
+     * Ends execution of the script immediately,
+     * the debugger engine may not respond,
+     * though if possible should be designed to do so.
+     *
+     * The script will be terminated right away and be followed by a
+     * disconnection of the network connection from the IDE
+     * (and debugger engine if required in multi request apache processes).
+     */
+    public function cmdStop(): string
     {
         $transaction = $this->cmd('stop');
         $this->transactions[$transaction->getId()] = $transaction;
+
+        return $transaction->getId();
     }
 
-    /* (optional): stops interaction with the debugger engine. Once this command is executed, the IDE will no longer be able to communicate with the debugger engine. This does not end execution of the script as does the stop command above, but rather detaches from debugging. Support of this continuation command is optional, and the IDE should verify support for it via the feature_get command. If the IDE has created stdin/stdout/stderr pipes for execution of the script (eg. an interactive shell or other console to catch script output), it should keep those open and usable by the process until the process has terminated normally. */
+    /**
+     * (optional): stops interaction with the debugger engine.
+     * Once this command is executed, the IDE will no longer be
+     * able to communicate with the debugger engine.
+     *
+     * This does not end execution of the script as does the stop command above,
+     * but rather detaches from debugging.
+     * Support of this continuation command is optional,
+     * and the IDE should verify support for it via the feature_get command.
+     *
+     * If the IDE has created stdin/stdout/stderr pipes for execution of the script
+     * (eg. an interactive shell or other console to catch script output),
+     * it should keep those open and usable by the process until
+     * the process has terminated normally.
+     */
     public function cmdDetach()
     {
         $transaction = $this->cmd('detatch');
@@ -148,13 +210,19 @@ class XDebugApp
     }
 
     /*======================================*/
-    /*===   BREAKPOINTS       ========*/
+    /*===   BREAKPOINTS             ========*/
     /*======================================*/
 
-    public function cmdBreakpointSet()
+    public function cmdBreakpointSet(string $file, int $lineno): string
     {
-        $transaction = $this->cmd('breakpoint_set');
+        $transaction = $this->cmd('breakpoint_set', [
+            '-t line',
+            '-f ' . $file,
+            '-n ' . $lineno,
+        ]);
         $this->transactions[$transaction->getId()] = $transaction;
+
+        return $transaction->getId();
     }
 
     public function cmdBreakpointGet()
@@ -244,10 +312,15 @@ class XDebugApp
     /*======================================*/
     /*===         source           ========*/
     /*======================================*/
-    public function cmdSource()
+    public function cmdSource(): string
     {
-        $transaction = $this->cmd('source');
+        $transaction = $this->cmd('source', [
+            '-f file:///home/ada/xdebug-client/example-page.php'
+        ]);
+
         $this->transactions[$transaction->getId()] = $transaction;
+
+        return $transaction->getId();
     }
 
     /*======================================*/
@@ -274,6 +347,11 @@ class XDebugApp
     /*===                           ========*/
     /*======================================*/
 
+    public function getDevice(): IDevice
+    {
+        return $this->device;
+    }
+
     public function setDevice($device)
     {
         $this->device = $device;
@@ -286,13 +364,14 @@ class XDebugApp
         }
     }
 
-    protected function cmd(string $cmd, array $args = []): XDebugTransaction
+    protected function cmd(string $cmd, array $args = [], string $data = ''): XDebugTransaction
     {
         $transaction = new XDebugTransaction();
         $transaction->setId($this->transaction_id);
 
         $transaction->setCommad($cmd);
         $transaction->setArgs($args);
+        $transaction->setData($data);
 
         $this->transaction_id ++;
 
