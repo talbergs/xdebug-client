@@ -6,15 +6,12 @@ use Acme\Device\IDevice;
 use Acme\HTTP\HTTPResponse;
 use Acme\Hub;
 use Acme\HTTP\HTTPRequest;
-use Acme\Log;
 use Acme\Protocol\CWsProtocol;
 
 class HttpSessionHandler implements IHandler
 {
     public function handle(IDevice $device, Hub $hub)
     {
-        Log::log(__CLASS__.':'.__FUNCTION__);
-
         $str = $device->getConnection()->read();
         if ($str === '') {
             d(__CLASS__ . ' <> deviceid:' . $device->getId() . ' LEFT ');

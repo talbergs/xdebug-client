@@ -17,6 +17,11 @@ class XDebugApp
     public $language;
     public Idevice $device;
 
+    public function __construct()
+    {
+        /* $this->session = new */ 
+    }
+
     public function onInit(\SimpleXMLElement $xml)
     {
         foreach ($xml->getDocNamespaces() as $prefix => $ns) {
@@ -125,7 +130,8 @@ class XDebugApp
             'max_data',
             'max_depth',
             'extended_properties',
-            // The following features strings MAY be available, if they are not, the IDE should assume that the feature is not available:
+            // The following features strings MAY be available, if they are not,
+            // the IDE should assume that the feature is not available:
             'supported_encodings',
             'supports_postmortem',
             'show_hidden',
@@ -364,7 +370,7 @@ class XDebugApp
         }
     }
 
-    protected function cmd(string $cmd, array $args = [], string $data = ''): XDebugTransaction
+    public function cmd(string $cmd, array $args = [], string $data = ''): XDebugTransaction
     {
         $transaction = new XDebugTransaction();
         $transaction->setId($this->transaction_id);

@@ -6,6 +6,7 @@ use Acme\Device\IDevice;
 use Acme\Exceptions\XDebugClientLeft;
 use Acme\Hub;
 use Acme\Log;
+use Acme\XDebugApp\Messages\CMessageFactory;
 
 class XDebugSessionHandler implements IHandler
 {
@@ -28,37 +29,10 @@ class XDebugSessionHandler implements IHandler
 
         Log::log(__CLASS__.':'.__FUNCTION__);
         Log::log(pretty_xml($str));
+        $imessage = CMessageFactory::fromXMLString($str);
+        d($imessage);
 
         $xdebug_app = $hub->getXDebugApp();
         $xdebug_app->setDevice($device);
-
-        $xml = simplexml_load_string($str);
-        /* $xml->attributes()->transaction_id; */
-
-        switch ($xml->getName()) {
-        case 'init': # https://xdebug.org/docs/dbgp#connection-initialization
-            $xdebug_app->onInit($xml);
-            $state = $hub->getState();
-            $state->setState('xdebug.init', [
-                'language' => $xdebug_app->language,
-                'idekey' => $xdebug_app->idekey,
-                'appid' => $xdebug_app->appid,
-                'engine_version' => $xdebug_app->engine_version,
-                'protocol_version' => $xdebug_app->protocol_version,
-                'fileuri' => $xdebug_app->fileuri,
-            ]);
-
-            $hub->notifyFrontend(json_encode($state->getState('xdebug.init')));
-            break;
-        case 'response': # https://xdebug.org/docs/dbgp#response
-            $xdebug_app->onResponse($xml);
-            break;
-        case 'stream': # https://xdebug.org/docs/dbgp#stream
-            throw new \Exception("'{$xml->getName()}' < not implemented.");
-        case 'notify': # https://xdebug.org/docs/dbgp#notify
-            throw new \Exception("'{$xml->getName()}' < not implemented.");
-        default:
-            throw new \Exception("'{$xml->getName()}' < unrecognized request name.");
-        }
     }
 }

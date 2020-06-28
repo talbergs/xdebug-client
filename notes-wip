@@ -2,3 +2,28 @@ in session state?
     Y: can commit session commands
     Y: can commit app commands
     N: can commit app commands
+
+State of process.
+Actions for transitioning
+
+interface XDebugSessionState {
+
+function starting()
+function stopping()
+function stopped()
+function running()
+function break()
+}
+
+XDebugSessionStartingState {}
+XDebugSessionStartingState {}
+
+- starting
+- stopping
+- stopped
+- running
+- break
+XDebugSession {
+    current_state
+    function setState() {}
+}

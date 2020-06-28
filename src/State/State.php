@@ -15,6 +15,9 @@ class State
             'protocol_version' => '',
         ],
         'files' => [],
+        'features' => [
+            'asdsd'
+        ],
     ];
 
     public function getFullState(): array

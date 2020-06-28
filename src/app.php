@@ -5,6 +5,8 @@ require_once dirname(__FILE__) . '/bootstrap.php';
 
 use Acme\Connection\CConnection;
 use Acme\Device\Device;
+use Acme\Exceptions\EConnectionBroke;
+use Acme\Exceptions\EUnknownUIMessage;
 use Acme\Handler\HttpAcceptHandler;
 use Acme\Handler\RpcAcceptHandler;
 use Acme\Handler\XDebugAcceptHandler;
@@ -42,11 +44,14 @@ $state->generateJsState(__DIR__ . '/../public/mjs/state/default.mjs');
 $hub->setState($state);
 
 while (true) {
-    /* echo 'tick-'.time().PHP_EOL; */
-    /* d($hub); */
-
     foreach ($hub->selectDeviceActivity(150) as $deviceid) {
-        $device = $hub->get($deviceid);
-        $device->exec($hub);
+        try {
+            $device = $hub->get($deviceid);
+            $device->exec($hub);
+        } catch (EUnknownUIMessage $e) {
+            $hub->notifyFrontend(json_encode(['errors' => [$e->getMessage()]]));
+        } catch (EConnectionBroke $e) {
+            $hub->remove($device->getId());
+        }
     }
 }

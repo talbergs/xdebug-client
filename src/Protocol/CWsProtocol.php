@@ -2,19 +2,57 @@
 
 namespace Acme\Protocol;
 
+use Acme\Exceptions\EConnectionBroke;
 use Acme\Log;
 
 
+/**
+ * Base Framing Protocol
+
+          0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-------+-+-------------+-------------------------------+
+     |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+     |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+     |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+     | |1|2|3|       |K|             |                               |
+     +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+     |     Extended payload length continued, if payload len == 127  |
+     + - - - - - - - - - - - - - - - +-------------------------------+
+     |                               |Masking-key, if MASK set to 1  |
+     +-------------------------------+-------------------------------+
+     | Masking-key (continued)       |          Payload Data         |
+     +-------------------------------- - - - - - - - - - - - - - - - +
+     :                     Payload Data continued ...                :
+     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+     |                     Payload Data continued ...                |
+     +---------------------------------------------------------------+
+
+ */
 class CWsProtocol implements IProtocol
 {
+    const OPCODE_CONTINUATION_FRAME = 0;
+    const OPCODE_TEXT_FRAME = 1;
+    const OPCODE_BINARY_FRAME = 2;
+    const OPCODE_CONNECTION_CLOSE_FRAME = 8;
+    const OPCODE_PING_FRAME = 9;
+    const OPCODE_PONG_FRAME = 10;
+
     public function read($resource): string
     {
         $len = socket_recv($resource, $byte1, 1, MSG_DONTWAIT);
         if ($byte1 === null) {
-            return '';
+            throw new EConnectionBroke();
         }
 
-        /* d((ord($byte1) & 0b1), '<< IF IS FIN'); */
+        $opcode = ord($byte1) & 0b00001111;
+        if ($opcode === self::OPCODE_CONNECTION_CLOSE_FRAME) {
+            throw new EConnectionBroke();
+        }
+
+        if ($opcode !== self::OPCODE_TEXT_FRAME) {
+            throw new \RuntimeException("Not implemented opcode: ${opcode}");
+        }
 
         // TODO: mask flag ... final flag .. opcode flag
         $len = socket_recv($resource, $byte2, 1, MSG_DONTWAIT);
@@ -34,11 +72,10 @@ class CWsProtocol implements IProtocol
         $len = socket_recv($resource, $masking_key, 4, MSG_DONTWAIT);
         $len = socket_recv($resource, $data, $length, MSG_DONTWAIT);
 
+        $data = (string) $data;
+
         $data_unmasked = $data ^ str_pad('', $length, $masking_key, STR_PAD_RIGHT);
         $data_unmasked = (string) $data_unmasked;
-
-        Log::log(__CLASS__.':'.__FUNCTION__);
-        Log::log($data_unmasked);
 
         return (string) $data_unmasked;
     }
@@ -70,6 +107,5 @@ class CWsProtocol implements IProtocol
         if ($bytes_written !== strlen($str)) {
             throw new \RuntimeException('This is a TODO, you are welcome!');
         }
-        d('DONE?');
     }
 }

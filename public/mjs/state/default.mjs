@@ -11,7 +11,10 @@ Pretty view:
         "fileuri": "",
         "protocol_version": ""
     },
-    "files": []
+    "files": [],
+    "features": [
+        "asdsd"
+    ]
 }
 */
-export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[]}');
+export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[],"features":["asdsd"]}');

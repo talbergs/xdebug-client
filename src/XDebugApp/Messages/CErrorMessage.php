@@ -3,7 +3,7 @@
 namespace Acme\XDebugApp\Messages;
 
 
-class ErrorRequest implements IMessage
+class CErrorMessage implements IMessage
 {
     public function __construct(
         string $fileuri,
