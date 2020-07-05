@@ -13,6 +13,35 @@
     <div id="app">
 
         <section id="right-side">
+            <div>
+                <div>
+                    <label>Listening:</label><input type="checkbox" />
+                    <sub>
+                        Do or do not listen
+                    </sub>
+                </div>
+                <div>
+                    <label>Host:</label><input type="text" disabled value="0.0.0.0"/>
+                    <sub>
+                        Domain name, IP or file path to unix socket.
+                        Listen to this place for xdebug server to connect.
+                    </sub>
+                </div>
+                <div>
+                    <label>Port:</label><input type="number" value="9000" disabled/>
+                    <sub>
+                        (Optional) If host is unix:///sock
+                    </sub>
+                </div>
+                <div>
+                    <label>IDE Key:</label><input type="text"/>
+                    <sub>
+                        (Optional) If various xdebug servers will connect to
+                        this IDE connection, respond only to thous who
+                        send the same idekey. Else accept any.
+                    </sub>
+                </div>
+            </div>
 
             <section v-if="view == 'session'" id="session">
                 <div style="display: grid; grid-template-columns: auto auto;">
@@ -96,6 +125,10 @@
             </button>
             <i v-else class="material-icons">power_off</i>
         </section>
+
+        <div class="error-toast" v-for="error in errors">
+            {{ error }}
+        </div>
     </div>
   </body>
 </html>

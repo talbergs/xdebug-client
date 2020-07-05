@@ -68,7 +68,31 @@ Ws.onopen(_ => {
 Ws.onclose(_ => {
   app.$data.ws_connedted = false;
 });
-Ws.onmessage(msg => app.extend(JSON.parse(msg.data)));
+
+Ws.onmessage(msg => {
+  if (msg.data == 'notify') {
+    new Notification("Hi there 222!");
+  } else {
+    app.extend(JSON.parse(msg.data))
+  }
+});
+
+Notification.requestPermission();
+
+// register service worker:
+// if (navigator.serviceWorker) {
+//   navigator.serviceWorker.register('/sw.js')
+//     .then(function() {
+//       return navigator.serviceWorker.ready;
+//     })
+//     .then(function(registration) {
+//       console.log(registration); // service worker is ready and working...
+//     });
+
+//   navigator.serviceWorker.addEventListener('message', function(event) {
+//     console.log(event.data.message); // Hello World !
+//   });
+// }
 
 window.Ws = Ws;
 window.Theme = Theme;

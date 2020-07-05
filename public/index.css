@@ -67,3 +67,12 @@ label {
   padding-right: 7px;
   border-right: var(--clr-accent) solid 1px;
 }
+
+.error-toast {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: red solid;
+    padding: 10px;
+    margin: 10px;
+}

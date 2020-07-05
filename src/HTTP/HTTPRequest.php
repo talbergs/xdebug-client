@@ -41,12 +41,12 @@ class HTTPRequest
 
     public function getIndexFilePath(): string
     {
-        return 'public/index.html';
+        return public_path('index.html');
     }
 
     public function getFilePath(): string
     {
-        return 'public' . $this->url;
+        return public_path($this->url);
     }
 
     public function isIndexRequest(): bool

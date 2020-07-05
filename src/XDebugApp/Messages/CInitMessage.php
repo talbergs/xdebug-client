@@ -5,6 +5,13 @@ namespace Acme\XDebugApp\Messages;
 
 class CInitMessage implements IMessage
 {
+    public $fileuri;
+    public $idekey;
+    public $engine_version;
+    public $protocol_version;
+    public $appid;
+    public $language;
+
     public function __construct(
         string $fileuri,
         string $idekey,

@@ -288,6 +288,17 @@ class XDebugApp
     /*======================================*/
     /*===         types           ========*/
     /*======================================*/
+
+    /**
+     * The IDE calls this command to get information on how to map language
+     * specific type names (as received in the property element returned by the
+     * context_get, and property_* commands). The debugger engine returns all
+     * data types that it supports. There may be multiple map elements with the
+     * same type attribute value, but the name value must be unique. This
+     * allows a language to map multiple language specific types into one of
+     * the common data types (eg. float and double can both be mapped to
+     * float).
+     */
     public function cmdTypemapGet()
     {
         $transaction = $this->cmd('typemap_get');

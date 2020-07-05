@@ -15,6 +15,7 @@ class State
             'protocol_version' => '',
         ],
         'files' => [],
+        'errors' => ["demo error1", "demo error2"],
         'features' => [
             'asdsd'
         ],

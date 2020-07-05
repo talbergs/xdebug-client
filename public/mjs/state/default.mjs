@@ -12,9 +12,13 @@ Pretty view:
         "protocol_version": ""
     },
     "files": [],
+    "errors": [
+        "demo error1",
+        "demo error2"
+    ],
     "features": [
         "asdsd"
     ]
 }
 */
-export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[],"features":["asdsd"]}');
+export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[],"errors":["demo error1","demo error2"],"features":["asdsd"]}');

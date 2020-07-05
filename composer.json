@@ -15,9 +15,11 @@
       ]
     },
     "require-dev": {
+    },
+    "require": {
+        "nunomaduro/collision": "^4.2",
         "larapack/dd": "^1.1",
         "phpunit/phpunit": "^9.1",
-        "phan/phan": "^3.0",
-        "bmitch/churn-php": "^1.0"
+        "phan/phan": "^3.0"
     }
 }

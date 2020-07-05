@@ -52,6 +52,9 @@ final class CUIMessageFactory
         case 'app:state':
             return new CUIAppStateMessage($params);
 
+        case 'app:add_connection':
+            return new CUIAddConnection($params);
+
         case 'app:files':
             return new CUIFilesMessage($params);
 
