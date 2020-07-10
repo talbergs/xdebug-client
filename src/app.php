@@ -10,14 +10,9 @@ use Acme\Device\Device;
 use Acme\Exceptions\EConnectionBroke;
 use Acme\Exceptions\EUnknownUIMessage;
 use Acme\Handler\HttpAcceptHandler;
-use Acme\Handler\RpcAcceptHandler;
-use Acme\Handler\XDebugAcceptHandler;
 use Acme\Hub;
 use Acme\Protocol\CHttpProtocol;
-use Acme\Protocol\RpcProtocol;
-use Acme\Protocol\XdbProtocol;
 use Acme\State\State;
-use Acme\Log;
 use Acme\XDebugApp\XDebugApp;
 
 (new \NunoMaduro\Collision\Provider)->register();
@@ -28,19 +23,7 @@ $http_conn = CConnection::inet($port);
 $http_conn->setProtocol(new CHttpProtocol());
 $web = new Device($http_conn, new HttpAcceptHandler());
 $hub->add($web);
-info("Listening for HTTP connection on: 0.0.0.0:${port}");
-
-/* $xdb_conn = CConnection::unix('/tmp/xdebug.sock'); */
-/* $xdb_conn = CConnection::inet(9000); */
-/* $xdb_conn->setProtocol(new XdbProtocol()); */
-/* $xdb = new Device($xdb_conn, new XDebugAcceptHandler()); */
-/* $hub->add($xdb); */
-/* info('Listening for XDebug connection on: /tmp/xdebug.sock'); */
-
-/* $rpc_conn = CConnection::unix('/tmp/rpc.sock'); */
-/* $xdb_conn->setProtocol(new RpcProtocol()); */
-/* $rpc = new Device($rpc_conn, new RpcAcceptHandler()); */
-/* $hub->add($rpc); */
+info("Listening for HTTP connection on: {$http_conn}");
 
 $state = new State();
 $state->generateJsState(public_path('mjs/state/default.mjs'));

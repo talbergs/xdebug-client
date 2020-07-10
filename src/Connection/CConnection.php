@@ -17,6 +17,11 @@ final class CConnection implements IConnection
         $this->protocol = $protocol;
     }
 
+    public function close()
+    {
+        socket_close($this->resource);
+    }
+
     public function read(): string
     {
         return $this->protocol->read($this->resource);
@@ -25,6 +30,13 @@ final class CConnection implements IConnection
     public function write(string $str)
     {
         $this->protocol->write($this->resource, $str);
+    }
+
+    public function accept(): IConnection
+    {
+        $resource = socket_accept($this->resource);
+
+        return new self($resource, $this->protocol);
     }
 
     public function getResource()
@@ -37,23 +49,25 @@ final class CConnection implements IConnection
         $this->protocol = $protocol;
     }
 
-    public function accept(): IConnection
+    public function __toString(): string
     {
-        $resource = socket_accept($this->resource);
+        socket_getsockname($this->resource, $host, $port);
 
-        return new self($resource, $this->protocol);
+        return $port === null ? $host : "$host:$port";
     }
 
-    public static function inet(int $port): IConnection
+    public static function inet(int $port, string $host = '0.0.0.0'): IConnection
     {
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+
         try {
-            socket_bind($socket, '0.0.0.0', $port);
+            socket_bind($socket, $host, $port);
         } catch (\Throwable $e) {
             throw new \RuntimeException("Could not bind to ${port}", socket_last_error(), $e);
         }
+
         socket_listen($socket);
 
         return new self($socket, new CNullProtocol());
@@ -65,16 +79,13 @@ final class CConnection implements IConnection
 
         @unlink($sock_path);
         $success = socket_bind($socket, $sock_path);
+
         if (!$success) {
             throw new \RuntimeException("Could not bind to ${sock_path}");
         }
+
         socket_listen($socket);
 
         return new self($socket, new CNullProtocol());
-    }
-
-    public function close()
-    {
-        socket_close($this->resource);
     }
 }

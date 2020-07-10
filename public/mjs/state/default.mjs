@@ -11,6 +11,11 @@ Pretty view:
         "fileuri": "",
         "protocol_version": ""
     },
+    "sessions": [
+        {
+            "name": "Some"
+        }
+    ],
     "files": [],
     "errors": [
         "demo error1",
@@ -21,4 +26,4 @@ Pretty view:
     ]
 }
 */
-export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"files":[],"errors":["demo error1","demo error2"],"features":["asdsd"]}');
+export default JSON.parse('{"xdebug":{"language":"","idekey":"","appid":"","engine_version":"","fileuri":"","protocol_version":""},"sessions":[{"name":"Some"}],"files":[],"errors":["demo error1","demo error2"],"features":["asdsd"]}');

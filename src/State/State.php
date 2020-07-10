@@ -14,6 +14,11 @@ class State
             'fileuri' => '',
             'protocol_version' => '',
         ],
+        'sessions' => [
+            [
+                'name' => 'Some'
+            ]
+        ],
         'files' => [],
         'errors' => ["demo error1", "demo error2"],
         'features' => [

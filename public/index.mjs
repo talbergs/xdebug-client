@@ -96,4 +96,16 @@ Notification.requestPermission();
 
 window.Ws = Ws;
 window.Theme = Theme;
+
+window.API = {}
+
+window.API.list_connections = function () {
+  window.Ws.ws.send('app:list_connections');
+}
+
+window.API.add_connection = function (host, port) {
+  window.Ws.ws.send('app:add_connection ' + JSON.stringify({
+    host, port
+  }));
+}
 // window.ff = favicon;
