@@ -49,6 +49,18 @@ final class CConnection implements IConnection
         $this->protocol = $protocol;
     }
 
+    public function toApi(): array
+    {
+        socket_getsockname($this->resource, $host, $port);
+
+        return $port === null ? compact('host') : compact('host', 'port');
+    }
+
+    public function getId(): int
+    {
+        return (int) $this->resource;
+    }
+
     public function __toString(): string
     {
         socket_getsockname($this->resource, $host, $port);
@@ -58,14 +70,23 @@ final class CConnection implements IConnection
 
     public static function inet(int $port, string $host = '0.0.0.0'): IConnection
     {
+        $addrs = gethostbynamel($host);
+        if ($addrs === false) {
+            throw new \RuntimeException("Cannot look up ${host}");
+        }
+
+        /* $host = reset($addrs); */
+        /* if ($host === '127.0.0.1') { */
+        /*     $host = '0.0.0.0'; */
+        /* } */
+
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
 
-        try {
-            socket_bind($socket, $host, $port);
-        } catch (\Throwable $e) {
-            throw new \RuntimeException("Could not bind to ${port}", socket_last_error(), $e);
+        $res = socket_bind($socket, $host, $port);
+        if ($res === false) {
+            throw new \RuntimeException("Could not bind to ${$host} ${port}", socket_last_error());
         }
 
         socket_listen($socket);

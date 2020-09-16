@@ -28,6 +28,9 @@ final class CUIMessageFactory
     public static function fromParams(string $method, array $params): IUIMessage
     {
         switch ($method) {
+        case 'app:start_session':
+            return new CUIStartXDSession($params);
+
         case 'xdebug:source':
             return new CUISourceMessage($params);
 
@@ -52,11 +55,17 @@ final class CUIMessageFactory
         case 'app:state':
             return new CUIAppStateMessage($params);
 
+        case 'app:list_sessions':
+            return new CUIListSessions($params);
+
         case 'app:list_connections':
             return new CUIListConnections($params);
 
-        case 'app:add_connection':
-            return new CUIAddConnection($params);
+        case 'app:add_listener':
+            return new CUIAddListener($params);
+
+        case 'app:add_session':
+            return new CUIAddSession($params);
 
         case 'app:files':
             return new CUIFilesMessage($params);

@@ -7,19 +7,15 @@ use Acme\Hub;
 
 class CUIBreakpointSetMessage implements IUIMessage
 {
-    public function __construct(array $params)
-    {
-    }
-
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugApp();
+        $xdebug_app = $hub->getXDebugSession();
         $transaction_id = $xdebug_app->cmdBreakpointSet(
             'file:///home/ada/xdebug-client/example-page.php',
             5
         );
         $xdebug_app->addCallback($transaction_id, function($xml) {
-            d('----', $xml, '----', $this);
+            /* d('----', $xml, '----', $this); */
         });
         $xdebug_app->commit();
     }

@@ -13,10 +13,10 @@ class CUISourceMessage implements IUIMessage
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugApp();
+        $xdebug_app = $hub->getXDebugSession();
         $transaction_id = $xdebug_app->cmdSource();
         $xdebug_app->addCallback($transaction_id, function($xml) {
-            d('----', $xml, '----', $this);
+            /* d('----', $xml, '----', $this); */
         });
         $xdebug_app->commit();
     }

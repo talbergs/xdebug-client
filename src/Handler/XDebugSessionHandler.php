@@ -3,60 +3,83 @@
 namespace Acme\Handler;
 
 use Acme\Device\IDevice;
-use Acme\Exceptions\XDebugClientLeft;
+use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Hub;
-use Acme\Log;
 use Acme\XDebugApp\Messages\CInitMessage;
 use Acme\XDebugApp\Messages\CMessageFactory;
+use Acme\XDebugApp\XDebugSession;
 
 class XDebugSessionHandler implements IHandler
 {
+    protected XDebugSession $session;
     protected $transactions = [];
     protected $transaction_id = 0;
     
+    public function __construct(XDebugSession $sess)
+    {
+        $this->session = $sess;
+    }
+
     public function handle(IDevice $device, Hub $hub)
     {
-        try {
-            $str = $device->getConnection()->read();
-        } catch (XDebugClientLeft $e) {
-            echo 'XDebugClientLeft';
-
-            $hub->remove($device->getId());
-            $hub->notifyFrontend('Debugger engine left unexpectedly.');
-
-            Log::log($e->getMessage());
-            return;
-        }
+        $conn = $device->getConnection();
+        $str = $conn->read();
 
         /** @var CInitMessage $imessage */
         $imessage = CMessageFactory::fromXMLString($str);
+        d($imessage);
+        info("XDebug server connecting to $device with idekey($imessage->idekey)");
 
-        if ($imessage->idekey === 'xdeweb') {
-            info("Connection from idekey: '{$imessage->idekey}'");
-            $xdebug_app = $hub->getXDebugApp();
-            $xdebug_app->setDevice($device);
-
-            // Bootsrap project
-            /* $xdebug_app->cmdTypemapGet(); */
-
-            // Set project breakpoints
-            /* $xdebug_app->cmdBreakpointSet(); */
-
-            // Set project configuration features
-            /* $xdebug_app->cmdFeatureSet('max_depth', '9'); */
-            /* $xdebug_app->cmdFeatureSet('max_children', '9'); */
-            /* $xdebug_app->cmdFeatureSet('max_data', '9'); */
-
-            // Breakpoint list - reassure breakpoints are set
-            /* $xdebug_app->cmdBreakpointList(); */
-
-            // If "NOT BREAK ON FIRST LINE IS configured" and there are breakpoints , then -> RUN !
-            /* $xdebug_app->cmdRun(); */
-            // ELSE synthetic "STEP INTO"
-            /* $xdebug_app->cmdStepInto(); */
-        } else {
-            info("Connection ignored (dropped) from idekey: '{$imessage->idekey}'");
-            $hub->remove($device->getId());
+        if ($this->session->state !== "starting") {
+            d("returning");
+            return;
+            throw new \RuntimeException("Session cannot accept another connection in state($this->session->state)");
         }
+
+        /* if ($this->session->idekey === '') { */
+            // TODO;
+            // If idekey is not specified, we accept any init request, as long as
+            // none of device sessions are in progress yet.
+        /* } */
+
+        if ($imessage->idekey !== $this->session->idekey) {
+            throw new XDebugSessionNotFound();
+        }
+
+        $this->session->state = "running";
+
+        info("Accepted session, negotiating features now...");
+
+        // Loopback device session will write back to (and read from also..).
+        /* $this->session->setDevice($device); */
+
+        // Bootsrap project
+        $this->session->cmdTypemapGet();
+        $this->session->commit();
+        return;
+
+        // Set project breakpoints
+        /* $this->session->cmdBreakpointSet(); */
+
+        // TODO: read config from GLOBAL state (allow to update negotiation during session runtime).
+        // Set project configuration features
+        $this->session->cmdFeatureSet('max_depth', '9');
+        $this->session->cmdFeatureSet('max_children', '9');
+        $this->session->cmdFeatureSet('max_data', '9');
+
+        // Breakpoint list - reassure breakpoints are set
+        $this->session->cmdBreakpointList();
+
+        // If "NOT BREAK ON FIRST LINE IS configured" and there are breakpoints , then -> RUN !
+        $this->session->cmdRun();
+        // ELSE synthetic "STEP INTO"
+        $this->session->cmdStepInto();
+
+        // what do we got??
+        d($this->session);
+
+        sleep(4);
+        //
+        $this->session->commit();
     }
 }

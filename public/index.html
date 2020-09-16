@@ -1,149 +1,170 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <head>
-    <meta charset="utf-8">
-    <link rel="icon">
-    <link rel="stylesheet" href="index.css">
-    <link href="https://fonts.googleapis.com/css?family=EB+Garamond&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <head>
+        <meta charset="utf-8">
+        <link rel="icon">
+        <link rel="stylesheet" href="index.css">
+        <link href="https://fonts.googleapis.com/css?family=EB+Garamond&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+        <title>Xdebug Ide</title>
+        <script type="module" src="index.mjs"></script>
+    </head>
+    <body>
+        <div id="app">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">
+                        +
+                    </a>
+                </li>
+                <li v-for="session in sessions" class="nav-item" role="presentation">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" role="tab" aria-controls="home" aria-selected="true">
+                        Home
+                    </a>
+                </li>
+            </ul>
+            <div class="modal-dialog modal-dialog-centered" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modal title</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Modal body text goes here.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+        <!-- <div id="app"> -->
 
-    <title>Xdebug Ide</title>
-    <script type="module" src="index.mjs"></script>
-  </head>
-  <body>
-    <div id="app">
-        <ul class="nav nav-tabs">
-          <li v-for="session in sessions" role="presentation" class="active">
-              <a>{{session.name}}</a>
-          </li>
-          <li role="presentation"><a href="#">+</a></li>
-        </ul>
-    </div>
+        <!--     <section id="right-side"> -->
+        <!--         <div> -->
+        <!--             <div> -->
+        <!--                 <label>Listening:</label><input type="checkbox" /> -->
+        <!--                 <sub> -->
+        <!--                     Do or do not listen -->
+        <!--                 </sub> -->
+        <!--             </div> -->
+        <!--             <div> -->
+        <!--                 <label>Host:</label><input type="text" disabled value="0.0.0.0"/> -->
+        <!--                 <sub> -->
+        <!--                     Domain name, IP or file path to unix socket. -->
+        <!--                     Listen to this place for xdebug server to connect. -->
+        <!--                 </sub> -->
+        <!--             </div> -->
+        <!--             <div> -->
+        <!--                 <label>Port:</label><input type="number" value="9000" disabled/> -->
+        <!--                 <sub> -->
+        <!--                     (Optional) If host is unix:///sock -->
+        <!--                 </sub> -->
+        <!--             </div> -->
+        <!--             <div> -->
+        <!--                 <label>IDE Key:</label><input type="text"/> -->
+        <!--                 <sub> -->
+        <!--                     (Optional) If various xdebug servers will connect to -->
+        <!--                     this IDE connection, respond only to thous who -->
+        <!--                     send the same idekey. Else accept any. -->
+        <!--                 </sub> -->
+        <!--             </div> -->
+        <!--         </div> -->
 
-    <!-- <div id="app"> -->
+        <!--         <section v-if="view == 'session'" id="session"> -->
+        <!--             <div style="display: grid; grid-template-columns: auto auto;"> -->
 
-    <!--     <section id="right-side"> -->
-    <!--         <div> -->
-    <!--             <div> -->
-    <!--                 <label>Listening:</label><input type="checkbox" /> -->
-    <!--                 <sub> -->
-    <!--                     Do or do not listen -->
-    <!--                 </sub> -->
-    <!--             </div> -->
-    <!--             <div> -->
-    <!--                 <label>Host:</label><input type="text" disabled value="0.0.0.0"/> -->
-    <!--                 <sub> -->
-    <!--                     Domain name, IP or file path to unix socket. -->
-    <!--                     Listen to this place for xdebug server to connect. -->
-    <!--                 </sub> -->
-    <!--             </div> -->
-    <!--             <div> -->
-    <!--                 <label>Port:</label><input type="number" value="9000" disabled/> -->
-    <!--                 <sub> -->
-    <!--                     (Optional) If host is unix:///sock -->
-    <!--                 </sub> -->
-    <!--             </div> -->
-    <!--             <div> -->
-    <!--                 <label>IDE Key:</label><input type="text"/> -->
-    <!--                 <sub> -->
-    <!--                     (Optional) If various xdebug servers will connect to -->
-    <!--                     this IDE connection, respond only to thous who -->
-    <!--                     send the same idekey. Else accept any. -->
-    <!--                 </sub> -->
-    <!--             </div> -->
-    <!--         </div> -->
+        <!--                 <label>fileuri</label> -->
+        <!--                 <div>{{xdebug.fileuri}}</div> -->
 
-    <!--         <section v-if="view == 'session'" id="session"> -->
-    <!--             <div style="display: grid; grid-template-columns: auto auto;"> -->
+        <!--                 <label>engine version</label> -->
+        <!--                 <div>{{xdebug.engine_version}}</div> -->
+        <!--             </div> -->
 
-    <!--                 <label>fileuri</label> -->
-    <!--                 <div>{{xdebug.fileuri}}</div> -->
+        <!--             <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button> -->
+        <!--             <button v-on:click="ws('xdebug:source')">ws xdebug:source</button> -->
+        <!--         </section> -->
 
-    <!--                 <label>engine version</label> -->
-    <!--                 <div>{{xdebug.engine_version}}</div> -->
-    <!--             </div> -->
+        <!--         <section v-if="view == 'code'" id="code"> -->
+        <!--             <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button> -->
+        <!--             <button v-on:click="ws('xdebug:source')">ws xdebug:source</button> -->
+        <!--             <button v-on:click="ws('xdebug:status')">ws xdebug:status</button> -->
+        <!--             <button v-on:click="ws('xdebug:run')">ws xdebug:run</button> -->
+        <!--             <button v-on:click="ws('xdebug:breakpoint_set')">ws xdebug:breakpoint_set</button> -->
+        <!--             <button v-on:click="ws('xdebug:breakpoint_list')">ws xdebug:breakpoint_list</button> -->
+        <!--             <button v-on:click="ws('xdebug:wrong_command')">ws xdebug:wrong_command</button> -->
+        <!--         </section> -->
 
-    <!--             <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button> -->
-    <!--             <button v-on:click="ws('xdebug:source')">ws xdebug:source</button> -->
-    <!--         </section> -->
+        <!--         <section v-if="view == 'settings'" id="settings"> -->
+        <!--             <button v-on:click="theme_light">theme light</button> -->
+        <!--             <button v-on:click="theme_dark">theme dark</button> -->
+        <!--         </section> -->
 
-    <!--         <section v-if="view == 'code'" id="code"> -->
-    <!--             <button v-on:click="ws('xdebug:stack_get')">ws xdebug:stack_get</button> -->
-    <!--             <button v-on:click="ws('xdebug:source')">ws xdebug:source</button> -->
-    <!--             <button v-on:click="ws('xdebug:status')">ws xdebug:status</button> -->
-    <!--             <button v-on:click="ws('xdebug:run')">ws xdebug:run</button> -->
-    <!--             <button v-on:click="ws('xdebug:breakpoint_set')">ws xdebug:breakpoint_set</button> -->
-    <!--             <button v-on:click="ws('xdebug:breakpoint_list')">ws xdebug:breakpoint_list</button> -->
-    <!--             <button v-on:click="ws('xdebug:wrong_command')">ws xdebug:wrong_command</button> -->
-    <!--         </section> -->
+        <!--         <section v-if="view == 'filetree'" id="filetree"> -->
+        <!--             <ul> -->
+        <!--                 <li v-for="file in files" :key="file.name">{{ file.name }}</li> -->
+        <!--             </ul> -->
+        <!--         </section> -->
 
-    <!--         <section v-if="view == 'settings'" id="settings"> -->
-    <!--             <button v-on:click="theme_light">theme light</button> -->
-    <!--             <button v-on:click="theme_dark">theme dark</button> -->
-    <!--         </section> -->
+        <!--     </section> -->
 
-    <!--         <section v-if="view == 'filetree'" id="filetree"> -->
-    <!--             <ul> -->
-    <!--                 <li v-for="file in files" :key="file.name">{{ file.name }}</li> -->
-    <!--             </ul> -->
-    <!--         </section> -->
+        <!--     <section id="controls"> -->
 
-    <!--     </section> -->
+        <!--         <button v-on:click="app_view_session"> -->
+        <!--             <i class="material-icons">insights</i> -->
+        <!--             <span>Session</span> -->
+        <!--         </button> -->
 
-    <!--     <section id="controls"> -->
+        <!--         <button v-on:click="app_view_settings"> -->
+        <!--             <i class="material-icons">settings</i> -->
+        <!--             <span>Settings</span> -->
+        <!--         </button> -->
 
-    <!--         <button v-on:click="app_view_session"> -->
-    <!--             <i class="material-icons">insights</i> -->
-    <!--             <span>Session</span> -->
-    <!--         </button> -->
+        <!--         <button v-on:click="app_view_filetree"> -->
+        <!--             <i class="material-icons">folder</i> -->
+        <!--             <span>Files</span> -->
+        <!--         </button> -->
 
-    <!--         <button v-on:click="app_view_settings"> -->
-    <!--             <i class="material-icons">settings</i> -->
-    <!--             <span>Settings</span> -->
-    <!--         </button> -->
+        <!--         <button v-on:click="app_view_filetree"> -->
+        <!--             <i class="material-icons">bug_report</i> -->
+        <!--             <span>Debug</span> -->
+        <!--         </button> -->
 
-    <!--         <button v-on:click="app_view_filetree"> -->
-    <!--             <i class="material-icons">folder</i> -->
-    <!--             <span>Files</span> -->
-    <!--         </button> -->
-
-    <!--         <button v-on:click="app_view_filetree"> -->
-    <!--             <i class="material-icons">bug_report</i> -->
-    <!--             <span>Debug</span> -->
-    <!--         </button> -->
-
-    <!--         <button v-on:click="app_view_code"> -->
-    <!--             <i class="material-icons">code</i> -->
-    <!--             <span>Sources</span> -->
-    <!--         </button> -->
+        <!--         <button v-on:click="app_view_code"> -->
+        <!--             <i class="material-icons">code</i> -->
+        <!--             <span>Sources</span> -->
+        <!--         </button> -->
 
 
-    <!--         <button v-on:click="ws('app:state')">ws app:state</button> -->
-    <!--         <button v-on:click="ws('app:files')">ws app:files</button> -->
-    <!--         <button v-on:click="icon_on">icon on</button> -->
-    <!--         <button v-on:click="icon_off">icon off</button> -->
-    <!--     </section> -->
+        <!--         <button v-on:click="ws('app:state')">ws app:state</button> -->
+        <!--         <button v-on:click="ws('app:files')">ws app:files</button> -->
+        <!--         <button v-on:click="icon_on">icon on</button> -->
+        <!--         <button v-on:click="icon_off">icon off</button> -->
+        <!--     </section> -->
 
-    <!--     <section id="statusbar"> -->
-    <!--         <button v-if="ws_connedted" v-on:click="ws('exit:session')"> -->
-    <!--             <i class="material-icons">wifi</i> -->
-    <!--         </button> -->
-    <!--         <i v-else class="material-icons">wifi_off</i> -->
+        <!--     <section id="statusbar"> -->
+        <!--         <button v-if="ws_connedted" v-on:click="ws('exit:session')"> -->
+        <!--             <i class="material-icons">wifi</i> -->
+        <!--         </button> -->
+        <!--         <i v-else class="material-icons">wifi_off</i> -->
 
-    <!--         <button v-if="in_xdebub_session" v-on:click="ws('exit:session')"> -->
-    <!--             <i class="material-icons">power_settings_new</i> -->
-    <!--         </button> -->
-    <!--         <i v-else class="material-icons">power_off</i> -->
-    <!--     </section> -->
+        <!--         <button v-if="in_xdebub_session" v-on:click="ws('exit:session')"> -->
+        <!--             <i class="material-icons">power_settings_new</i> -->
+        <!--         </button> -->
+        <!--         <i v-else class="material-icons">power_off</i> -->
+        <!--     </section> -->
 
-    <!--     <div class="error-toast" v-for="error in errors"> -->
-    <!--         {{ error }} -->
-    <!--     </div> -->
-    <!-- </div> -->
-  </body>
+        <!--     <div class="error-toast" v-for="error in errors"> -->
+        <!--         {{ error }} -->
+        <!--     </div> -->
+        <!-- </div> -->
+    </body>
 </html>

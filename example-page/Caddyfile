@@ -1,0 +1,15 @@
+:80
+
+root * /var/www/html
+
+@v1 {
+    host v1.*
+}
+php_fastcgi @v1 xd-php:9000
+
+@v2 {
+    host v2.*
+}
+php_fastcgi @v2 xd-php2:9000
+
+file_server

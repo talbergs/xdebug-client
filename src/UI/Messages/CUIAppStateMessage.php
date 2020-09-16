@@ -9,6 +9,6 @@ class CUIAppStateMessage implements IUIMessage
 {
     public function actOn(Hub $hub)
     {
-        $hub->notifyFrontend(json_encode($hub->getState()->getFullState()));
+        /* $hub->notifyFrontend(json_encode($hub->getState()->getFullState())); */
     }
 }

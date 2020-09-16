@@ -13,7 +13,7 @@ class CUIStackGetMessage implements IUIMessage
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugApp();
+        $xdebug_app = $hub->getXDebugSession();
         $xdebug_app->cmdStackGet();
         $xdebug_app->commit();
     }

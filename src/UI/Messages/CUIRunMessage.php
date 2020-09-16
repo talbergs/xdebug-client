@@ -13,7 +13,7 @@ class CUIRunMessage implements IUIMessage
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugApp();
+        $xdebug_app = $hub->getXDebugSession();
         $xdebug_app->cmdRun();
         $xdebug_app->commit();
     }

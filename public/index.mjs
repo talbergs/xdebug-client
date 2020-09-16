@@ -1,20 +1,17 @@
 import Vue from 'https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.esm.browser.js';
-import data from './mjs/state/default.mjs';
 import Theme from './mjs/theme.mjs';
 import Ws from './mjs/ws.mjs';
 import * as favicon from './mjs/favicon.mjs';
-
 
 Theme.check();
 favicon.waiting();
 
 window.app = new Vue({
   el: '#app',
-  data: Object.assign(data, {
-    path_remap: '',
-    view: '',
-    ws_connedted: false,
-  }),
+  data: {
+    show_new_session_modal: false,
+    sessions: []
+  },
   computed: {
     in_xdebub_session() {
       return this.xdebug.appid != '';
@@ -70,10 +67,9 @@ Ws.onclose(_ => {
 });
 
 Ws.onmessage(msg => {
-  if (msg.data == 'notify') {
-    new Notification("Hi there 222!");
-  } else {
-    app.extend(JSON.parse(msg.data))
+  const req = JSON.parse(msg.data);
+  if (req.type == 'notify') {
+    new Notification(req.msg);
   }
 });
 
@@ -99,13 +95,37 @@ window.Theme = Theme;
 
 window.API = {}
 
-window.API.list_connections = function () {
+window.API.list_connections = function() {
   window.Ws.ws.send('app:list_connections');
 }
 
-window.API.add_connection = function (host, port) {
-  window.Ws.ws.send('app:add_connection ' + JSON.stringify({
+window.API.start_session = function(host, port, idekey) {
+  window.Ws.ws.send('app:start_session ' + JSON.stringify({
+    host, port, idekey
+  }));
+}
+
+window.API.add_listener = function(host, port) {
+  window.Ws.ws.send('app:add_listener ' + JSON.stringify({
     host, port
   }));
 }
+
+window.API.list_sessions = function() {
+  window.Ws.ws.send('app:list_sessions ' + JSON.stringify({}));
+}
+
+window.API.add_session = function(listener_id, idekey) {
+  window.Ws.ws.send('app:add_session ' + JSON.stringify({
+    listener_id, idekey
+  }));
+}
+
+// setTimeout(_ => {
+//   window.API.add_session('0.0.0.0', 9000, 'dd');
+//   setTimeout(_ => {
+//     window.API.list_connections();
+//   }, 1000);
+// }, 1000);
+
 // window.ff = favicon;

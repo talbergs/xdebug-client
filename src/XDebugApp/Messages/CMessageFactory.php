@@ -18,7 +18,7 @@ class CMessageFactory
         case 'init':
             return new CInitMessage(
                 (string) $xml->xpath('/a:init/@fileuri')[0],
-                (string) $xml->xpath('/a:init/@idekey')[0],
+                (string) $xml->xpath('/a:init/@idekey')[0] ?? '',
                 (string) $xml->xpath('/a:init/a:engine/@version')[0],
                 (string) $xml->xpath('/a:init/@protocol_version')[0],
                 (string) $xml->xpath('/a:init/@appid')[0],

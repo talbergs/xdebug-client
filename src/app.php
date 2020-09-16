@@ -9,14 +9,18 @@ use Acme\Connection\CConnection;
 use Acme\Device\Device;
 use Acme\Exceptions\EConnectionBroke;
 use Acme\Exceptions\EUnknownUIMessage;
+use Acme\Exceptions\XDebugClientLeft;
+use Acme\Exceptions\XDebugSessionExists;
+use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Handler\HttpAcceptHandler;
 use Acme\Hub;
 use Acme\Protocol\CHttpProtocol;
-use Acme\State\State;
-use Acme\XDebugApp\XDebugApp;
 
-(new \NunoMaduro\Collision\Provider)->register();
-$hub = new Hub(new XDebugApp());
+/* (new \NunoMaduro\Collision\Provider)->register(); */
+$hub = new Hub();
+// Xdebug Session:
+// - STATUS: enabled (listening) | disabled (pending) | active (debugging)
+// - CONNECTION: port, host, idekey
 
 $port = 8080;
 $http_conn = CConnection::inet($port);
@@ -25,23 +29,34 @@ $web = new Device($http_conn, new HttpAcceptHandler());
 $hub->add($web);
 info("Listening for HTTP connection on: {$http_conn}");
 
-$state = new State();
-$state->generateJsState(public_path('mjs/state/default.mjs'));
-$hub->setState($state);
-
 while (true) {
     foreach ($hub->selectDeviceActivity(150) as $deviceid) {
+        $device = $hub->get($deviceid);
+        debug("> Activity on: {$device}");
+
         try {
-            $device = $hub->get($deviceid);
             $device->exec($hub);
-        } catch (EUnknownUIMessage $e) {
-            $hub->notifyFrontend(json_encode(['errors' => [$e->getMessage()]]));
-            debug($e->getMessage());
-        } catch (EConnectionBroke $e) {
+        } catch (XDebugSessionNotFound $e) {
+
+            debug("{$device} XDebugSessionNotFound {$e->getMessage()}");
             $hub->remove($device->getId());
-            debug($e->getMessage());
+
+        } catch (EUnknownUIMessage $e) {
+            debug("{$device} EUnknownUIMessage {$e->getMessage()}");
+            $hub->notifyFrontend(json_encode(['errors' => [$e->getMessage()]]));
+        } catch (XDebugClientLeft $e) {
+            debug("{$device} Debugger engine left unexpectedly.");
+            $hub->remove($device->getId());
+        } catch (XDebugSessionExists $e) {
+            debug("{$device} XDebugSessionExists {$e->getMessage()}");
+        } catch (EConnectionBroke $e) {
+            debug("{$device} EConnectionBroke {$e->getMessage()}");
+            $hub->remove($device->getId());
         } catch (Throwable $e) {
-            debug($e->getMessage());
+            debug("{$device} Throwable {$e->getMessage()}");
+            d('==TRACE_START==');
+            d($e->getTrace());
+            d('==TRACE_END==');
         }
     }
 }

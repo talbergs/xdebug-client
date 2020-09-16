@@ -1,17 +1,13 @@
 #!/bin/bash
+docker network create xd
 
-docker rm -f xdebug-web
-
-docker build -t xdebug-web /home/ada/.zbx-box/build/xdebug-web
+docker rm -f xd-xd
+docker build -t xd-xd --file $PWD/Dockerfile .
 
 # this volume will be baked in
-docker run -it --rm --name xdebug-web -v $PWD:/app \
-    --network zbx-box \
-    -p 8080:80 \
-    -d \
-    --volume $HOME/zabbix-dev:/www \
-    xdebug-web
+docker run -it --detach --rm --network xd --name xd-xd \
+    -v $PWD:/app \
+    -p 8080:8080 \
+    xd-xd /app/src/app.php
 
-echo ---------------------------
-echo ---------------------------
-docker logs --follow xdebug-web
+zbx,follow xd-xd

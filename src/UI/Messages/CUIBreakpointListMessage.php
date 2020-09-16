@@ -13,7 +13,7 @@ class CUIBreakpointListMessage implements IUIMessage
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugApp();
+        $xdebug_app = $hub->getXDebugSession();
         $xdebug_app->cmdBreakpointList();
         $xdebug_app->commit();
     }

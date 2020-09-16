@@ -55,4 +55,10 @@ class Device implements IDevice
         $this->handler->handle($this, $hub);
     }
 
+    public function __toString(): string
+    {
+        $handler = get_class($this->handler);
+
+        return "{$this->conn} [$this->id] ($handler)";
+    }
 }

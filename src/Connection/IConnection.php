@@ -13,4 +13,5 @@ interface IConnection
     public function accept(): IConnection;
     public function getResource();
     public function close();
+    public function getId(): int;
 }
