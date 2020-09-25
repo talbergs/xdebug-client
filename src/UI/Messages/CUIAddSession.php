@@ -3,7 +3,7 @@
 namespace Acme\UI\Messages;
 
 use Acme\Hub;
-use Acme\XDebugApp\XDebugSession;
+use Acme\XDebugApp\XDebugSessionBag;
 
 
 class CUIAddSession implements IUIMessage
@@ -27,7 +27,7 @@ class CUIAddSession implements IUIMessage
     public function actOn(Hub $hub)
     {
         // TODO: check if listener id is correct
-        $hub->xdebug_sessions[$this->listener_id . ':' . $this->idekey] = new XDebugSession();
+        $hub->xdebug_sessions[$this->listener_id . ':' . $this->idekey] = new XDebugSessionBag();
 
         /* new Device($new_conn, new XDebugSessionHandler($sess)); */
 

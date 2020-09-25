@@ -7,17 +7,28 @@ use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Hub;
 use Acme\XDebugApp\Messages\CInitMessage;
 use Acme\XDebugApp\Messages\CMessageFactory;
-use Acme\XDebugApp\XDebugSession;
+use Acme\XDebugApp\XDebugSessionBag;
 
 class XDebugSessionHandler implements IHandler
 {
-    protected XDebugSession $session;
+    protected XDebugSessionBag $session_bag;
     protected $transactions = [];
     protected $transaction_id = 0;
     
-    public function __construct(XDebugSession $sess)
+    public function __construct(XDebugSessionBag $sess)
     {
-        $this->session = $sess;
+        $this->session_bag = $sess;
+    }
+
+    public function handleInit(CInitMessage $message)
+    {
+        if ($message->idekey !== $this->session_bag->idekey) {
+            // TODO: remove from session_bag (because of ref-counter)
+            throw new XDebugSessionNotFound();
+        }
+
+        $this->session_bag->cmdTypemapGet();
+        $this->session_bag->commit();
     }
 
     public function handle(IDevice $device, Hub $hub)
@@ -25,15 +36,29 @@ class XDebugSessionHandler implements IHandler
         $conn = $device->getConnection();
         $str = $conn->read();
 
-        /** @var CInitMessage $imessage */
         $imessage = CMessageFactory::fromXMLString($str);
         d($imessage);
-        info("XDebug server connecting to $device with idekey($imessage->idekey)");
-
-        if ($this->session->state !== "starting") {
+        switch (get_class($imessage)) {
+        case CInitMessage::class:
+            info("Server attempts to initalize session using idekey: '{$imessage->idekey}'");
+            $this->handleInit($imessage);
+            info("Success on '{$imessage->idekey}'");
+            break;
+        case CResponseMessage::class:
+            info("Server responds to transaction");
+            d($imessage, $str);
+            break;
+        default:
             d("returning");
             return;
-            throw new \RuntimeException("Session cannot accept another connection in state($this->session->state)");
+        }
+
+        return;
+
+        if ($this->session_bag->state !== "starting") {
+            d("returning");
+            return;
+            throw new \RuntimeException("Session cannot accept another connection in state($this->session_bag->state)");
         }
 
         /* if ($this->session->idekey === '') { */
@@ -42,11 +67,11 @@ class XDebugSessionHandler implements IHandler
             // none of device sessions are in progress yet.
         /* } */
 
-        if ($imessage->idekey !== $this->session->idekey) {
+        if ($imessage->idekey !== $this->session_bag->idekey) {
             throw new XDebugSessionNotFound();
         }
 
-        $this->session->state = "running";
+        $this->session_bag->state = "running";
 
         info("Accepted session, negotiating features now...");
 
@@ -54,8 +79,8 @@ class XDebugSessionHandler implements IHandler
         /* $this->session->setDevice($device); */
 
         // Bootsrap project
-        $this->session->cmdTypemapGet();
-        $this->session->commit();
+        $this->session_bag->cmdTypemapGet();
+        $this->session_bag->commit();
         return;
 
         // Set project breakpoints
@@ -63,23 +88,23 @@ class XDebugSessionHandler implements IHandler
 
         // TODO: read config from GLOBAL state (allow to update negotiation during session runtime).
         // Set project configuration features
-        $this->session->cmdFeatureSet('max_depth', '9');
-        $this->session->cmdFeatureSet('max_children', '9');
-        $this->session->cmdFeatureSet('max_data', '9');
+        $this->session_bag->cmdFeatureSet('max_depth', '9');
+        $this->session_bag->cmdFeatureSet('max_children', '9');
+        $this->session_bag->cmdFeatureSet('max_data', '9');
 
         // Breakpoint list - reassure breakpoints are set
-        $this->session->cmdBreakpointList();
+        $this->session_bag->cmdBreakpointList();
 
         // If "NOT BREAK ON FIRST LINE IS configured" and there are breakpoints , then -> RUN !
-        $this->session->cmdRun();
+        $this->session_bag->cmdRun();
         // ELSE synthetic "STEP INTO"
-        $this->session->cmdStepInto();
+        $this->session_bag->cmdStepInto();
 
         // what do we got??
-        d($this->session);
+        d($this->session_bag);
 
         sleep(4);
         //
-        $this->session->commit();
+        $this->session_bag->commit();
     }
 }

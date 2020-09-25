@@ -8,8 +8,8 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +57 server4.php
-badd +42 server3.php
-badd +50 server5.php
+badd +1 server3.php
+badd +1 server5.php
 badd +5 App.php
 badd +10 HTTPRequest.php
 badd +10 XdebugRequest.php
@@ -18,10 +18,12 @@ badd +1 composer.lock
 badd +18 composer.json
 badd +28 js.js
 badd +1 server2.php
+badd +0 NERD_tree_1
+badd +0 NERD_tree_2
 argglobal
 %argdel
 set stal=2
-edit server3.php
+edit NERD_tree_1
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -34,11 +36,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 31 + 119) / 239)
-exe 'vert 2resize ' . ((&columns * 207 + 119) / 239)
+exe 'vert 1resize ' . ((&columns * 15 + 59) / 119)
+exe 'vert 2resize ' . ((&columns * 103 + 59) / 119)
 argglobal
-enew
-file NERD_tree_1
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -47,8 +47,19 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal nofen
+silent! normal! zE
+let s:l = 1 - ((0 * winheight(0) + 27) / 55)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+1
+normal! 0
 wincmd w
 argglobal
+if bufexists("server3.php") | buffer server3.php | else | edit server3.php | endif
+if &buftype ==# 'terminal'
+  silent file server3.php
+endif
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -57,21 +68,17 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-27
-normal! zo
-46
-normal! zo
-let s:l = 42 - ((21 * winheight(0) + 27) / 55)
+let s:l = 1 - ((0 * winheight(0) + 27) / 55)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-42
-normal! 077|
+1
+normal! 0
 wincmd w
 2wincmd w
-exe 'vert 1resize ' . ((&columns * 31 + 119) / 239)
-exe 'vert 2resize ' . ((&columns * 207 + 119) / 239)
-tabedit server5.php
+exe 'vert 1resize ' . ((&columns * 15 + 59) / 119)
+exe 'vert 2resize ' . ((&columns * 103 + 59) / 119)
+tabedit NERD_tree_2
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -84,11 +91,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 31 + 119) / 239)
-exe 'vert 2resize ' . ((&columns * 207 + 119) / 239)
+exe 'vert 1resize ' . ((&columns * 20 + 59) / 119)
+exe 'vert 2resize ' . ((&columns * 98 + 59) / 119)
 argglobal
-enew
-file NERD_tree_2
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -97,8 +102,19 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal nofen
+silent! normal! zE
+let s:l = 1 - ((0 * winheight(0) + 27) / 55)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+1
+normal! 0
 wincmd w
 argglobal
+if bufexists("server5.php") | buffer server5.php | else | edit server5.php | endif
+if &buftype ==# 'terminal'
+  silent file server5.php
+endif
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -107,25 +123,15 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-33
-normal! zo
-41
-normal! zo
-54
-normal! zo
-71
-normal! zo
-75
-normal! zo
-let s:l = 20 - ((6 * winheight(0) + 27) / 55)
+let s:l = 1 - ((0 * winheight(0) + 27) / 55)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-20
-normal! 020|
+1
+normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 31 + 119) / 239)
-exe 'vert 2resize ' . ((&columns * 207 + 119) / 239)
+exe 'vert 1resize ' . ((&columns * 20 + 59) / 119)
+exe 'vert 2resize ' . ((&columns * 98 + 59) / 119)
 tabnext 1
 set stal=1
 if exists('s:wipebuf') && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
@@ -134,7 +140,7 @@ endif
 unlet! s:wipebuf
 set winheight=1 winwidth=20 winminheight=1 winminwidth=1 shortmess=filnxtoOIWcFqT
 let s:sx = expand("<sfile>:p:r")."x.vim"
-if file_readable(s:sx)
+if filereadable(s:sx)
   exe "source " . fnameescape(s:sx)
 endif
 let &so = s:so_save | let &siso = s:siso_save

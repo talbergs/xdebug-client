@@ -46,13 +46,25 @@ while (true) {
             $hub->notifyFrontend(json_encode(['errors' => [$e->getMessage()]]));
         } catch (XDebugClientLeft $e) {
             debug("{$device} Debugger engine left unexpectedly.");
+            d($hub);
+            d($device);
             $hub->remove($device->getId());
         } catch (XDebugSessionExists $e) {
             debug("{$device} XDebugSessionExists {$e->getMessage()}");
         } catch (EConnectionBroke $e) {
             debug("{$device} EConnectionBroke {$e->getMessage()}");
             $hub->remove($device->getId());
+        } catch (TypeError $e) {
+            info("CONNOT RECOVER BYE!");
+            d('==TRACE_START==');
+            d($e->getTrace());
+            d('==TRACE_END==');
+            d($e);
+            info("CONNOT RECOVER BYE!");
+            dd($hub->xdebug_sessions);
+            die;
         } catch (Throwable $e) {
+            d(get_class($e));
             debug("{$device} Throwable {$e->getMessage()}");
             d('==TRACE_START==');
             d($e->getTrace());

@@ -5,53 +5,46 @@ namespace Acme\Handler;
 use Acme\Device\Device;
 use Acme\Device\IDevice;
 use Acme\Hub;
-use Acme\XDebugApp\XDebugSession;
+use Acme\XDebugApp\XDebugSessionBag;
 
 class XDebugAcceptHandler implements IHandler
 {
-    protected XDebugSession $session;
+    protected XDebugSessionBag $session;
 
-    public function __construct(XDebugSession $sess)
+    public function __construct(XDebugSessionBag $sess)
     {
         $this->session = $sess;
     }
 
+    /**
+     * Accept connections from xDebug server if needed.
+     */
     public function handle(IDevice $device, Hub $hub)
     {
-        $conn = $this->session->accept();
+        info("Server attempts to connect on {$this->session->connection}.");
+        debug("@device {$device}.");
 
-        $han = new XDebugSessionHandler($this->session);
+        // TODO this "accepted" must become false when last subsession device is removed.
+        // TODO: REFCOUNT
+        // $this->session is actually session_bag
+        // that has refcount of sessions
+        if (!$this->session->connection->isAccepted()) {
+            $conn = $this->session->accept();
 
-        $device = new Device($conn, $han);
+            $han = new XDebugSessionHandler($this->session);
+            $device = new Device($conn, $han);
+            $hub->add($device);
+            info("Connect accepted on {$this->session->connection}.");
+            debug("@device {$device}.");
+        } else {
+            $conn = $device->getConnection()->accept();
 
-        $hub->add($device);
+            $han = new XDebugSessionHandler($this->session);
+            $device = new Device($conn, $han);
+            $hub->add($device);
 
-        /* info("=== accept session ==="); */
-        /* d($hub); */
-        /* info("=== accept session ==="); */
-
-        // Allways accept ANY connection, pass down session.
-        /* $hub->add( */
-        /*     new Device( */
-        /*         $device->getConnection()->accept(), */
-        /*         new XDebugSessionHandler($this->session) */
-        /*     ) */
-        /* ); */
-
-        /* $hub->xd_listeners */
-        /* $hub->addXDebugSession('my-id', $sess); */
-        /* $hub->bindXDebugSession($new_device->getId(), $device->getId()); */
-        
-        /* $session_id = 'SESS:' . $new_device->getId() . ':'; */
-        /* $hub->addXDebugSession($session_id, new XDebugSession($new_conn, 'uu2')); */
-
-        /* info("1"); */
-        /* sleep(5); */
-        /* $hub->add($new_device); */
-        /* info("2"); */
-        /* sleep(5); */
-        /* info("3"); */
-
-        /* info("> Listening for xdebug connection on {$new_device}"); */
+            info("Reusing connection on {$this->session->connection}.");
+            debug("@device {$device}.");
+        }
     }
 }

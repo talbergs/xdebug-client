@@ -10,6 +10,9 @@ final class CConnection implements IConnection
 {
     protected IProtocol $protocol;
     protected $resource;
+    protected string $address = '';
+    protected int $port = 0;
+    protected bool $accepted = false;
 
     protected function __construct($resource, IProtocol $protocol)
     {
@@ -32,11 +35,19 @@ final class CConnection implements IConnection
         $this->protocol->write($this->resource, $str);
     }
 
+    public function isAccepted(): bool
+    {
+        return $this->accepted;
+    }
+
     public function accept(): IConnection
     {
         $resource = socket_accept($this->resource);
 
-        return new self($resource, $this->protocol);
+        $conn = new self($resource, $this->protocol);
+        $conn->accepted = true;
+
+        return $conn;
     }
 
     public function getResource()
@@ -47,6 +58,19 @@ final class CConnection implements IConnection
     public function setProtocol(IProtocol $protocol)
     {
         $this->protocol = $protocol;
+    }
+
+    public function getPort(): int
+    {
+        /* socket_getsockname($this->resource, $_addr, $port); */
+        /* return $port; */
+
+        return $this->port;
+    }
+
+    public function getAddress(): string
+    {
+        return $this->address;
     }
 
     public function toApi(): array
@@ -72,7 +96,7 @@ final class CConnection implements IConnection
     {
         $addrs = gethostbynamel($host);
         if ($addrs === false) {
-            throw new \RuntimeException("Cannot look up ${host}");
+            throw new \RuntimeException("DNS error - Cannot look up '${host}'");
         }
 
         /* $host = reset($addrs); */
@@ -91,7 +115,12 @@ final class CConnection implements IConnection
 
         socket_listen($socket);
 
-        return new self($socket, new CNullProtocol());
+        $conn = new self($socket, new CNullProtocol());
+
+        $conn->address = gethostbyname($host);
+        $conn->port = $port;
+
+        return $conn;
     }
 
     public static function unix(string $sock_path): IConnection

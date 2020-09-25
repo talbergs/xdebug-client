@@ -7,7 +7,7 @@ use Acme\Device\Device;
 use Acme\Connection\CConnection;
 use Acme\Protocol\XdbProtocol;
 use Acme\Hub;
-use Acme\XDebugApp\XDebugSession;
+use Acme\XDebugApp\XDebugSessionBag;
 
 
 class CUIAddListener implements IUIMessage
@@ -47,7 +47,7 @@ class CUIAddListener implements IUIMessage
 
         $IDEKEY = "some";
 
-        $sess = new XDebugSession($IDEKEY);
+        $sess = new XDebugSessionBag($IDEKEY);
         $conn->setProtocol(new XdbProtocol());
         $xdb = new Device($conn, new XDebugAcceptHandler($sess));
         $hub->add($xdb);

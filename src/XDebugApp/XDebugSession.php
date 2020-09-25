@@ -3,7 +3,6 @@
 namespace Acme\XDebugApp;
 
 use Acme\Connection\IConnection;
-use Acme\Device\IDevice;
 
 class XDebugSession
 {
@@ -11,7 +10,6 @@ class XDebugSession
     protected $callbacks = [];
     protected $transaction_id = 0;
     public $fileuri;
-    public $idekey;
     public $engine_version;
     public $protocol_version;
     public $appid;
@@ -20,10 +18,8 @@ class XDebugSession
 
     public string $state = 'starting';
 
-    /* public function __construct(IConnection $conn, string $idekey) */
-    public function __construct(string $idekey = '', IConnection $conn)
+    public function __construct(IConnection $conn)
     {
-        $this->idekey = $idekey;
         $this->conn = $conn;
     }
 
@@ -46,7 +42,6 @@ class XDebugSession
         }
 
         $this->fileuri = (string) $xml->xpath('/a:init/@fileuri')[0];
-        $this->idekey = (string) $xml->xpath('/a:init/@idekey')[0];
         $this->engine_version = (string) $xml->xpath('/a:init/a:engine/@version')[0];
         $this->protocol_version = (string) $xml->xpath('/a:init/@protocol_version')[0];
         $this->appid = (string) $xml->xpath('/a:init/@appid')[0];
@@ -399,10 +394,5 @@ class XDebugSession
 
         return $transaction;
     }
-
-    public static function makeId(string $host, int $port, string $idekey): string
-    {
-        return "{$host}:{$port}:{$idekey}";
-    }
-    
 }
+

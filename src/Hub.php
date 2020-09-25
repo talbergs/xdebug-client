@@ -2,6 +2,7 @@
 
 namespace Acme;
 
+use Acme\Connection\IConnection;
 use Acme\Device\Device;
 use Acme\Connection\CConnection;
 use Acme\Device\IDevice;
@@ -10,12 +11,13 @@ use Acme\Exceptions\XDebugSessionExists;
 use Acme\Protocol\XdbProtocol;
 use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Handler\WsSessionHandler;
-use Acme\XDebugApp\XDebugSession;
+use Acme\XDebugApp\XDebugSessionBag;
+use SplObjectStorage;
 
 
 class Hub
 {
-    public \SplObjectStorage $XDSSESSIONS;
+    public \SplObjectStorage $xd_session_bags;
 
     /**
      * @var IDevice[]
@@ -29,7 +31,18 @@ class Hub
 
     public function __construct()
     {
-        $this->XDSSESSIONS = new \SplObjectStorage();
+        $this->xd_session_bags = new SplObjectStorage();
+    }
+
+    public function findOrCreateSessionBag(IConnection $connection): XDebugSessionBag
+    {
+        if ($this->xd_session_bags->contains($connection)) {
+            return $this->xd_session_bags->offsetGet($connection);
+        }
+
+        $this->xd_session_bags->offsetSet($connection, new XDebugSessionBag($connection));
+
+        return $this->xd_session_bags->offsetGet($connection);
     }
 
     public function remove(int $id)
@@ -91,7 +104,7 @@ class Hub
         return $this->devices[$id];
     }
 
-    public function getXDebugSession(string $session_id): XDebugSession
+    public function getXDebugSession(string $session_id): XDebugSessionBag
     {
         if (!array_key_exists($session_id, $this->xdebug_sessions)) {
             throw new XDebugSessionNotFound($session_id);
@@ -105,7 +118,7 @@ class Hub
         return array_key_exists($session_id, $this->xdebug_sessions);
     }
 
-    public function addXDebugSession(string $session_id, XDebugSession $session)
+    public function addXDebugSession(string $session_id, XDebugSessionBag $session)
     {
         $this->xdebug_sessions[$session_id] = $session;
     }
@@ -122,7 +135,7 @@ class Hub
     }
 
     // Absolute mess. RefCount since $sessions MAY SHARE $connection
-    public function createXDebugSession(string $host, int $port, string $idekey): XDebugSession
+    public function createXDebugSession(string $host, int $port, string $idekey): XDebugSessionBag
     {
         $conn = null;
         foreach ($this->devices as $device) {
@@ -145,7 +158,7 @@ class Hub
             $this->add($xdb);
         }
 
-        $session = new XDebugSession($conn, $idekey);
+        $session = new XDebugSessionBag($conn, $idekey);
 
         $session_id = 'SESS:' . $device->getId() . ':' . $idekey;
 
@@ -174,7 +187,7 @@ class Hub
         }
 
         $conn->setProtocol(new XdbProtocol());
-        $xdb = new Device($conn, new XDebugAcceptHandler(new XDebugSession('idekey')));
+        $xdb = new Device($conn, new XDebugAcceptHandler(new XDebugSessionBag('idekey')));
 
         $this->add($xdb);
     }

@@ -111,6 +111,10 @@ window.API.add_listener = function(host, port) {
   }));
 }
 
+window.API.dd_hub = function() {
+  window.Ws.ws.send('app:files ' + JSON.stringify({}));
+}
+
 window.API.list_sessions = function() {
   window.Ws.ws.send('app:list_sessions ' + JSON.stringify({}));
 }

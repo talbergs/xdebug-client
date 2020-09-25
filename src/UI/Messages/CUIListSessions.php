@@ -14,11 +14,12 @@ class CUIListSessions implements IUIMessage
             $resp[] = [
                 'state' => $session->state,
                 'idekey' => $session->idekey,
-                'connection' => $session->conn,
+                'connection' => (string) $session->conn,
             ];
         }
 
         $hub->notifyFrontend(json_encode($resp));
         d($hub->xdebug_sessions);
+        d($resp);
     }
 }

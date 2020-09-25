@@ -14,4 +14,7 @@ interface IConnection
     public function getResource();
     public function close();
     public function getId(): int;
+    public function getPort(): ?int;
+    public function getAddress(): string;
+    public function isAccepted(): bool;
 }
