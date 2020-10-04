@@ -13,6 +13,7 @@ class CUIFilesMessage implements IUIMessage
 
     public function actOn(Hub $hub)
     {
+        d($hub->xd_sessions);
         d($hub);
         $files = [];
         $directories = [];

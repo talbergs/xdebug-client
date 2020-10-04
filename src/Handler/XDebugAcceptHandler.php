@@ -9,11 +9,11 @@ use Acme\XDebugApp\XDebugSessionBag;
 
 class XDebugAcceptHandler implements IHandler
 {
-    protected XDebugSessionBag $session;
+    protected XDebugSessionBag $session_bag;
 
-    public function __construct(XDebugSessionBag $sess)
+    public function __construct(XDebugSessionBag $session_bag)
     {
-        $this->session = $sess;
+        $this->session_bag = $session_bag;
     }
 
     /**
@@ -21,29 +21,28 @@ class XDebugAcceptHandler implements IHandler
      */
     public function handle(IDevice $device, Hub $hub)
     {
-        info("Server attempts to connect on {$this->session->connection}.");
-        debug("@device {$device}.");
-
+        info("Accept handler!");
         // TODO this "accepted" must become false when last subsession device is removed.
         // TODO: REFCOUNT
-        // $this->session is actually session_bag
         // that has refcount of sessions
-        if (!$this->session->connection->isAccepted()) {
-            $conn = $this->session->accept();
+        if (!$this->session_bag->isAccepted()) {
+            info("ssssssssssss");
+            $conn = $this->session_bag->accept();
 
-            $han = new XDebugSessionHandler($this->session);
+            $han = new XDebugSessionHandler($this->session_bag);
             $device = new Device($conn, $han);
             $hub->add($device);
-            info("Connect accepted on {$this->session->connection}.");
+            info("Connect accepted on {$this->session_bag->connection}.");
             debug("@device {$device}.");
         } else {
+            info("rrrrrrrrrrrr");
             $conn = $device->getConnection()->accept();
 
-            $han = new XDebugSessionHandler($this->session);
+            $han = new XDebugSessionHandler($this->session_bag);
             $device = new Device($conn, $han);
             $hub->add($device);
 
-            info("Reusing connection on {$this->session->connection}.");
+            info("Reusing connection on {$this->session_bag->connection}.");
             debug("@device {$device}.");
         }
     }

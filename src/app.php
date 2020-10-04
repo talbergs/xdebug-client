@@ -37,7 +37,6 @@ while (true) {
         try {
             $device->exec($hub);
         } catch (XDebugSessionNotFound $e) {
-
             debug("{$device} XDebugSessionNotFound {$e->getMessage()}");
             $hub->remove($device->getId());
 
@@ -61,7 +60,6 @@ while (true) {
             d('==TRACE_END==');
             d($e);
             info("CONNOT RECOVER BYE!");
-            dd($hub->xdebug_sessions);
             die;
         } catch (Throwable $e) {
             d(get_class($e));

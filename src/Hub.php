@@ -11,6 +11,7 @@ use Acme\Exceptions\XDebugSessionExists;
 use Acme\Protocol\XdbProtocol;
 use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Handler\WsSessionHandler;
+use Acme\XDebugApp\XDebugSession;
 use Acme\XDebugApp\XDebugSessionBag;
 use SplObjectStorage;
 
@@ -23,11 +24,7 @@ class Hub
      * @var IDevice[]
      */
     protected array $devices = [];
-
-    /**
-     * @var XDebugSession[]
-     */
-    public array $xdebug_sessions = [];
+    public array $xd_sessions = [];
 
     public function __construct()
     {
@@ -55,6 +52,18 @@ class Hub
     {
         $device->setId(count($this->devices));
         $this->devices[$device->getId()] = $device;
+    }
+
+    public function patchFrontend(string $message, string $path)
+    {
+        $ws_deviceids = $this->devicesByHandler(WsSessionHandler::class);
+        foreach ($ws_deviceids as $deviceid) {
+            $this->get($deviceid)->getConnection()->write(json_encode([
+                'type' => 'patch',
+                'path' => $path,
+                'msg' => $message
+            ]));
+        }
     }
 
     public function notifyFrontend(string $message)
@@ -104,23 +113,23 @@ class Hub
         return $this->devices[$id];
     }
 
-    public function getXDebugSession(string $session_id): XDebugSessionBag
+    public function getXDebugSession(int $session_id): XDebugSession
     {
-        if (!array_key_exists($session_id, $this->xdebug_sessions)) {
+        if (!array_key_exists($session_id, $this->xd_sessions)) {
             throw new XDebugSessionNotFound($session_id);
         }
 
-        return $this->xdebug_sessions[$session_id];
+        return $this->xd_sessions[$session_id];
     }
 
-    public function hasXDebugSession(string $session_id): bool
+    public function hasXDebugSession(int $session_id): bool
     {
         return array_key_exists($session_id, $this->xdebug_sessions);
     }
 
-    public function addXDebugSession(string $session_id, XDebugSessionBag $session)
+    public function addXDebugSession(int $session_id, XDebugSession $session)
     {
-        $this->xdebug_sessions[$session_id] = $session;
+        $this->xd_sessions[$session_id] = $session;
     }
 
     public function hasXDebugConnection(string $connection_id): bool
@@ -190,18 +199,5 @@ class Hub
         $xdb = new Device($conn, new XDebugAcceptHandler(new XDebugSessionBag('idekey')));
 
         $this->add($xdb);
-    }
-
-    public array $xd_listeners = [];
-    public array $xd_sessions = [];
-
-    public function bindXDebugListener(int $listener_id, string $idekey)
-    {
-        $this->xd_listeners[$listener_id][$idekey] = 1;
-    }
-
-    public function bindXDebugSession(int $session_id, int $listener_id)
-    {
-        $this->xd_sessions[$session_id] = $listener_id;
     }
 }

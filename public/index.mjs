@@ -1,4 +1,5 @@
 import Vue from 'https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.esm.browser.js';
+import Vuex from 'https://cdn.jsdelivr.net/npm/vuex@3.5.1/dist/vuex.esm.browser.js';
 import Theme from './mjs/theme.mjs';
 import Ws from './mjs/ws.mjs';
 import * as favicon from './mjs/favicon.mjs';
@@ -6,18 +7,41 @@ import * as favicon from './mjs/favicon.mjs';
 Theme.check();
 favicon.waiting();
 
+Vue.use(Vuex);
+
+const store = new Vuex.Store({
+  state: {
+    count: 0,
+    sessions: [],
+  },
+  mutations: {
+    sessions(state, sessions) {
+      state.sessions = sessions;
+    }
+  }
+});
+
 window.app = new Vue({
   el: '#app',
+  store,
   data: {
-    show_new_session_modal: false,
-    sessions: []
+    show_add_session_modal: false,
+    hl_session_id: 0,
+    hl_session_idx: 0,
+    hl_menu: '',
   },
   computed: {
+    sessions() {
+      return this.$store.state.sessions;
+    },
     in_xdebub_session() {
       return this.xdebug.appid != '';
     },
   },
   methods: {
+    setSessions(sessions) {
+      this.$store.commit('setSessions', sessions)
+    },
     exit_session() {
       alert("exit");
     },
@@ -70,6 +94,9 @@ Ws.onmessage(msg => {
   const req = JSON.parse(msg.data);
   if (req.type == 'notify') {
     new Notification(req.msg);
+  }
+  if (req.type == 'patch') {
+    app.$store.commit(req.path, JSON.parse(req.msg));
   }
 });
 

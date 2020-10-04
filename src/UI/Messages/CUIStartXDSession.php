@@ -8,7 +8,6 @@ use Acme\Device\Device;
 use Acme\Connection\CConnection;
 use Acme\Protocol\XdbProtocol;
 use Acme\Hub;
-use Acme\XDebugApp\XDebugSessionBag;
 
 
 class CUIStartXDSession implements IUIMessage
@@ -72,8 +71,6 @@ class CUIStartXDSession implements IUIMessage
             $conn = CConnection::unix($this->host);
         }
 
-        info("Creating NEW connection {$conn}.");
-
         // Set appropriate protocol.
         $conn->setProtocol(new XdbProtocol());
 
@@ -85,23 +82,38 @@ class CUIStartXDSession implements IUIMessage
      */
     public function actOn(Hub $hub)
     {
-        if ($conn = $this->findConnection($hub)) {
-            $sess = new XDebugSessionBag($this->idekey, $conn);
-            $hub->xdebug_sessions[] = $sess;
+        $connection = $this->findConnection($hub);
+        $is_new_conn = false;
+
+        if (!$connection) {
+            $is_new_conn = true;
+            $connection = $this->createConnection($hub);
+            info("Creating NEW connection {$connection}.");
         } else {
-            $conn = $this->createConnection($hub);
+            info("Using connection {$connection}.");
+        }
 
-            // Create session.
-            $sess = new XDebugSessionBag($this->idekey, $conn);
-            $hub->xdebug_sessions[] = $sess;
+        $session_bag = $hub->findOrCreateSessionBag($connection);
 
-            $device = new Device($conn, new XDebugAcceptHandler($sess));
+        if ($session_bag->hasSession($this->idekey)) {
+            info("Connot create {$this->idekey} is already used.");
+            return;
+        }
+
+        $session = $session_bag->findOrCreateSession($this->idekey);
+        $hub->xd_sessions[spl_object_id($session)] = $session;
+
+        if ($is_new_conn) {
+            $device = new Device($connection, new XDebugAcceptHandler($session_bag));
             $hub->add($device);
         }
 
-        // Add listener with that session.
+        (new CUIListSessions)->actOn($hub);
 
-        info("Listening for server connection on {$sess->connection}.");
-        debug("@device {$device}.");
+        // TODO: we may respond that session on this Device with this IDEKEY already exists
+        /* $session_bag->findOrCreateSession($this->idekey); */
+
+        /* info("Listening for server connection on {$connection->connection}."); */
+        /* debug("@device {$device}."); */
     }
 }

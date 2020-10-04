@@ -40,6 +40,7 @@ class CMessageFactory
                 (string) reset($encoding),
                 (string) reset($transaction_id),
                 (string) reset($contents),
+                $xml
             );
             break;
         # https://xdebug.org/docs/dbgp#stream

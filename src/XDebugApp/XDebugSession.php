@@ -3,49 +3,60 @@
 namespace Acme\XDebugApp;
 
 use Acme\Connection\IConnection;
+use Acme\XDebugApp\Messages\CInitMessage;
 
 class XDebugSession
 {
-    protected $transactions = [];
+    public $transactions = [];
+    public $test_responses = [];
     protected $callbacks = [];
-    protected $transaction_id = 0;
+    /* protected $transaction_id = 0; */
     public $fileuri;
     public $engine_version;
     public $protocol_version;
     public $appid;
     public $language;
-    public IConnection $conn;
+    public string $idekey;
+
+    public array $typemap = [];
+    public array $breakpoints = [];
 
     public string $state = 'starting';
 
-    public function __construct(IConnection $conn)
+    public function __construct(string $idekey)
     {
-        $this->conn = $conn;
+        $this->idekey = $idekey;
+        $this->fileuri = '';
+        $this->engine_version = '';
+        $this->protocol_version = '';
+        $this->appid = '';
+        $this->language = '';
     }
 
-    /**
-     * undocumented function
-     *
-     * @return void
-     */
-    public function accept(): IConnection
+    public function setBreakpoints(array $breakpoints)
     {
-        $this->conn = $this->conn->accept();
-
-        return $this->conn;
+        $this->breakpoints = $breakpoints;
     }
-    
-    public function onInit(\SimpleXMLElement $xml)
+
+    public function setTypemap(array $typemap)
     {
-        foreach ($xml->getDocNamespaces() as $prefix => $ns) {
-            $xml->registerXPathNamespace($prefix ?: 'a', $ns);
+        $this->typemap = $typemap;
+    }
+
+    public function commit(IConnection $connection)
+    {
+        foreach ($this->transactions as $line) {
+            $connection->write((string) $line);
         }
+    }
 
-        $this->fileuri = (string) $xml->xpath('/a:init/@fileuri')[0];
-        $this->engine_version = (string) $xml->xpath('/a:init/a:engine/@version')[0];
-        $this->protocol_version = (string) $xml->xpath('/a:init/@protocol_version')[0];
-        $this->appid = (string) $xml->xpath('/a:init/@appid')[0];
-        $this->language = (string) $xml->xpath('/a:init/@language')[0];
+    public function onInit(CInitMessage $initmessage)
+    {
+        $this->fileuri = $initmessage->fileuri;
+        $this->engine_version = $initmessage->engine_version;
+        $this->protocol_version = $initmessage->protocol_version;
+        $this->appid = $initmessage->appid;
+        $this->language = $initmessage->language;
     }
 
     public function onResponse(\SimpleXMLElement $xml)
@@ -66,15 +77,16 @@ class XDebugSession
         /* default: throw new \RuntimeException("Not implemented:"); */
         }
 
-        $transaction_id = $xml->attributes()->transaction_id . '';
-        unset($this->transactions[$transaction_id]);
+        /* $transaction_id = $xml->attributes()->transaction_id . ''; */
+        /* unset($this->transactions[$transaction_id]); */
 
-        if (array_key_exists($transaction_id, $this->callbacks)) {
-            $this->callbacks[$transaction_id]($xml);
-            unset($this->callbacks[$transaction_id]);
-        }
+        /* if (array_key_exists($transaction_id, $this->callbacks)) { */
+        /*     $this->callbacks[$transaction_id]($xml); */
+        /*     unset($this->callbacks[$transaction_id]); */
+        /* } */
     }
 
+    /** @deprecated */
     public function addCallback(string $transaction_id, callable $callback)
     {
         $this->callbacks[$transaction_id] = $callback;
@@ -95,7 +107,7 @@ class XDebugSession
             'notify_ok',
         ];
 
-        $this->transactions[$this->transaction_id] = $this->cmd('feature_set', ['-n', $feature_name, '-v', $value]);
+        $this->transactions[] = $this->cmd('feature_set', ['-n', $feature_name, '-v', $value]);
     }
 
     /**
@@ -108,7 +120,7 @@ class XDebugSession
     public function cmdStatus(): string
     {
         $transaction = $this->cmd('status');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
 
         return $transaction->getId();
     }
@@ -149,7 +161,7 @@ class XDebugSession
         ];
 
         $transaction = $this->cmd('feature_get', ['-n', $feature_name]);
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -163,28 +175,28 @@ class XDebugSession
     public function cmdRun()
     {
         $transaction = $this->cmd('run');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /* steps to the next statement, if there is a function call involved it will break on the first statement in that function */
     public function cmdStepInto()
     {
         $transaction = $this->cmd('step_into');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /* steps to the next statement, if there is a function call on the line from which the step_over is issued then the debugger engine will stop at the statement after the function call in the same scope as from where the command was issued */
     public function cmdStepOver()
     {
         $transaction = $this->cmd('step_over');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /* steps out of the current scope and breaks on the statement after returning from the current function. (Also called 'finish' in GDB) */
     public function cmdStepOut()
     {
         $transaction = $this->cmd('step_out');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /**
@@ -199,7 +211,7 @@ class XDebugSession
     public function cmdStop(): string
     {
         $transaction = $this->cmd('stop');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
 
         return $transaction->getId();
     }
@@ -222,47 +234,46 @@ class XDebugSession
     public function cmdDetach()
     {
         $transaction = $this->cmd('detatch');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
     /*===   BREAKPOINTS             ========*/
     /*======================================*/
 
-    public function cmdBreakpointSet(string $file, int $lineno): string
+    public function cmdBreakpointSet(string $file, int $lineno)
     {
         $transaction = $this->cmd('breakpoint_set', [
             '-t line',
             '-f ' . $file,
             '-n ' . $lineno,
         ]);
-        $this->transactions[$transaction->getId()] = $transaction;
 
-        return $transaction->getId();
+        $this->transactions[] = $transaction;
     }
 
     public function cmdBreakpointGet()
     {
         $transaction = $this->cmd('breakpoint_get');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdBreakpointUpdate()
     {
         $transaction = $this->cmd('breakpoint_update');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdBreakpointRemove()
     {
         $transaction = $this->cmd('breakpoint_remove');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdBreakpointList()
     {
         $transaction = $this->cmd('breakpoint_list');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -271,13 +282,13 @@ class XDebugSession
     public function cmdStackDepth()
     {
         $transaction = $this->cmd('stack_depth');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdStackGet()
     {
         $transaction = $this->cmd('stack_get');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -286,13 +297,13 @@ class XDebugSession
     public function cmdContextNames()
     {
         $transaction = $this->cmd('context_names');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdContextGet()
     {
         $transaction = $this->cmd('context_get');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -312,7 +323,7 @@ class XDebugSession
     public function cmdTypemapGet()
     {
         $transaction = $this->cmd('typemap_get');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -321,19 +332,19 @@ class XDebugSession
     public function cmdPropertyGet()
     {
         $transaction = $this->cmd('property_get');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdPropertySet()
     {
         $transaction = $this->cmd('property_set');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     public function cmdPropertyValue()
     {
         $transaction = $this->cmd('property_value');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -345,7 +356,7 @@ class XDebugSession
             '-f file:///home/ada/xdebug-client/example-page.php'
         ]);
 
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
 
         return $transaction->getId();
     }
@@ -356,7 +367,7 @@ class XDebugSession
     public function cmdBreak()
     {
         $transaction = $this->cmd('break');
-        $this->transactions[$transaction->getId()] = $transaction;
+        $this->transactions[] = $transaction;
     }
 
     /*======================================*/
@@ -374,23 +385,16 @@ class XDebugSession
     /*===                           ========*/
     /*======================================*/
 
-    public function commit()
-    {
-        foreach ($this->transactions as $line) {
-            $this->conn->write((string) $line);
-        }
-    }
-
     public function cmd(string $cmd, array $args = [], string $data = ''): XDebugTransaction
     {
         $transaction = new XDebugTransaction();
-        $transaction->setId($this->transaction_id);
+        /* $transaction->setId($this->transaction_id); */
 
         $transaction->setCommad($cmd);
         $transaction->setArgs($args);
         $transaction->setData($data);
 
-        $this->transaction_id ++;
+        /* $this->transaction_id ++; */
 
         return $transaction;
     }
