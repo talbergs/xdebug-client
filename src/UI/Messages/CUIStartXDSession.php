@@ -101,6 +101,8 @@ class CUIStartXDSession implements IUIMessage
         }
 
         $session = $session_bag->findOrCreateSession($this->idekey);
+
+        $hub->xd_map_sessid_to_bag[spl_object_id($session)] = $session_bag;
         $hub->xd_sessions[spl_object_id($session)] = $session;
 
         if ($is_new_conn) {

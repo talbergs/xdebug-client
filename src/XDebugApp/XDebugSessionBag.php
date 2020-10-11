@@ -41,7 +41,7 @@ class XDebugSessionBag
      *
      * @return void
      */
-    public function findOrCreateSession(string $idekey)
+    public function findOrCreateSession(string $idekey): XDebugSession
     {
         if (!$this->hasSession($idekey)) {
             $this->sessions[$idekey] = new XDebugSession($idekey);

@@ -7,19 +7,20 @@ use Acme\Hub;
 
 class CUIStatusMessage implements IUIMessage
 {
+    protected string $sessionid;
+
     public function __construct(array $params)
     {
+        $this->sessionid = (string) $params['sessionid'];
     }
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugSession();
-        $transaction_id = $xdebug_app->cmdStatus();
-        $xdebug_app->addCallback($transaction_id, function($xml) use ($hub) {
-            /* d('----', $xml, '----', $this); */
-            /* $hub->getState()->setState('engine.status', 32); */
-            /* $hub->notifyFrontend(json_encode($hub->getState()->getFullState())); */
-        });
-        $xdebug_app->commit();
+        $session = $hub->getXDebugSession((int) $this->sessionid);
+        $session->cmdStatus();
+
+        $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
+        d($bag, $session);
+        $bag->commit($session);
     }
 }

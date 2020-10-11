@@ -117,12 +117,9 @@ class XDebugSession
      *
      * https://xdebug.org/docs/dbgp#status
      */
-    public function cmdStatus(): string
+    public function cmdStatus()
     {
-        $transaction = $this->cmd('status');
-        $this->transactions[] = $transaction;
-
-        return $transaction->getId();
+        $this->transactions[] = $this->cmd('status');
     }
     
     # https://xdebug.org/docs/dbgp#status

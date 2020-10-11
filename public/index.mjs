@@ -146,17 +146,20 @@ window.API.list_sessions = function() {
   window.Ws.ws.send('app:list_sessions ' + JSON.stringify({}));
 }
 
-window.API.add_session = function(listener_id, idekey) {
-  window.Ws.ws.send('app:add_session ' + JSON.stringify({
-    listener_id, idekey
+// window.API.add_session = function(listener_id, idekey) {
+//   window.Ws.ws.send('app:add_session ' + JSON.stringify({
+//     listener_id, idekey
+//   }));
+// }
+
+window.API.xd_status = function(sessionid) {
+  window.Ws.ws.send('xdebug:status ' + JSON.stringify({
+    sessionid
   }));
 }
 
-// setTimeout(_ => {
-//   window.API.add_session('0.0.0.0', 9000, 'dd');
-//   setTimeout(_ => {
-//     window.API.list_connections();
-//   }, 1000);
-// }, 1000);
+setTimeout(_ => {
+  API.start_session('xd-xd', 9000, "KEY1");
+}, 1000);
 
 // window.ff = favicon;
