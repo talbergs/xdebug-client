@@ -39,6 +39,26 @@ window.app = new Vue({
     },
   },
   methods: {
+    current_session_run() {
+      const session_id = this.$store.state.sessions[this.hl_session_idx].id;
+      API.xd_run(session_id);
+    },
+    current_session_step_into() {
+      const session_id = this.$store.state.sessions[this.hl_session_idx].id;
+      API.xd_step_into(session_id);
+    },
+    current_session_step_over() {
+      const session_id = this.$store.state.sessions[this.hl_session_idx].id;
+      API.xd_step_over(session_id);
+    },
+    current_session_step_out() {
+      const session_id = this.$store.state.sessions[this.hl_session_idx].id;
+      API.xd_step_out(session_id);
+    },
+    current_session_stop() {
+      const session_id = this.$store.state.sessions[this.hl_session_idx].id;
+      API.xd_stop(session_id);
+    },
     setSessions(sessions) {
       this.$store.commit('setSessions', sessions)
     },
@@ -151,6 +171,52 @@ window.API.list_sessions = function() {
 //     listener_id, idekey
 //   }));
 // }
+
+window.API.app_state = function() {
+  window.Ws.ws.send('app:state');
+}
+
+window.API.xd_stop = function(sessionid) {
+  window.Ws.ws.send('xdebug:stop ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_step_over = function(sessionid) {
+  window.Ws.ws.send('xdebug:step_over ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_step_out = function(sessionid) {
+  window.Ws.ws.send('xdebug:step_out ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_step_into = function(sessionid) {
+  window.Ws.ws.send('xdebug:step_into ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_run = function(sessionid) {
+  window.Ws.ws.send('xdebug:run ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_breakpoint_list = function(sessionid) {
+  window.Ws.ws.send('xdebug:breakpoint_list ' + JSON.stringify({
+    sessionid
+  }));
+}
+
+window.API.xd_stack_get = function(sessionid) {
+  window.Ws.ws.send('xdebug:stack_get ' + JSON.stringify({
+    sessionid
+  }));
+}
 
 window.API.xd_status = function(sessionid) {
   window.Ws.ws.send('xdebug:status ' + JSON.stringify({

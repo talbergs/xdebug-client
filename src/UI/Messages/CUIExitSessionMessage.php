@@ -7,16 +7,21 @@ use Acme\Hub;
 
 class CUIExitSessionMessage implements IUIMessage
 {
+    protected string $sessionid;
+
+    public function __construct(array $params)
+    {
+        $this->sessionid = (string) $params['sessionid'];
+    }
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugSession();
-        $transaction_id = $xdebug_app->cmdStop();
-        $xdebug_app->addCallback($transaction_id, function($xml) use ($hub, $xdebug_app) {
-            /* d('>>>>>>>>', $xml, '<<<<<<', $this); */
-            $hub->remove($xdebug_app->getDevice()->getId());
-            $xdebug_app->appid = null;
-        });
-        $xdebug_app->commit();
+        $session = $hub->getXDebugSession((int) $this->sessionid);
+
+        $session->cmdStop();
+
+        $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
+
+        $bag->commit($session);
     }
 }

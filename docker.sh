@@ -10,4 +10,4 @@ docker run -it --detach --rm --network xd --name xd-xd \
     -p 8080:8080 \
     xd-xd /app/src/app.php
 
-zbx,follow xd-xd
+# zbx,follow xd-xd

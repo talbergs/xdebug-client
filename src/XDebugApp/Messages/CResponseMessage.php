@@ -41,6 +41,23 @@ class CResponseMessage implements IMessage
         ];
     }
 
+    public function readStackGet(): array
+    {
+        $stack = [];
+
+        foreach ($this->xml->xpath('/a:response/*') as $elem) {
+            $stack[] = [
+                'where' => (string) $elem->attributes()['where'],
+                'level' => (string) $elem->attributes()['level'],
+                'type' => (string) $elem->attributes()['type'],
+                'filename' => (string) $elem->attributes()['filename'],
+                'lineno' => (string) $elem->attributes()['lineno'],
+            ];
+        }
+
+        return $stack;
+    }
+
     public function readBreakpoints(): array
     {
         $breakpoints = [];

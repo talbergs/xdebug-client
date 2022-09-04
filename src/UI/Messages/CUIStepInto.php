@@ -5,7 +5,7 @@ namespace Acme\UI\Messages;
 use Acme\Hub;
 
 
-class CUIStackGetMessage implements IUIMessage
+class CUIStepInto implements IUIMessage
 {
     protected string $sessionid;
 
@@ -17,7 +17,8 @@ class CUIStackGetMessage implements IUIMessage
     public function actOn(Hub $hub)
     {
         $session = $hub->getXDebugSession((int) $this->sessionid);
-        $session->cmdStackGet();
+
+        $session->cmdStepInto();
 
         $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
 

@@ -7,14 +7,20 @@ use Acme\Hub;
 
 class CUIBreakpointListMessage implements IUIMessage
 {
+    protected string $sessionid;
+
     public function __construct(array $params)
     {
+        $this->sessionid = (string) $params['sessionid'];
     }
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugSession();
-        $xdebug_app->cmdBreakpointList();
-        $xdebug_app->commit();
+        $session = $hub->getXDebugSession((int) $this->sessionid);
+        $session->cmdBreakpointList();
+
+        $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
+
+        $bag->commit($session);
     }
 }

@@ -28,12 +28,13 @@ class CUIListSessions implements IUIMessage
                         'appid' => $session->appid,
                         'language' => $session->language,
                     ],
-                    'breakpoints' => [
-                        'breakpoints' => $session->breakpoints,
-                    ],
+                    'breakpoints' => $session->breakpoints,
+                    'stack' => $session->stack,
                     'xd_server' => [
                         'typemap' => $session->typemap,
                     ],
+                    'source' => $session->source,
+                    'code_lineno' => $session->code_lineno,
                 ];
             }
 

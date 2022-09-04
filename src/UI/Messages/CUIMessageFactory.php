@@ -40,6 +40,15 @@ final class CUIMessageFactory
         case 'xdebug:breakpoint_set':
             return new CUIBreakpointSetMessage($params);
 
+        case 'xdebug:step_into':
+            return new CUIStepInto($params);
+
+        case 'xdebug:step_out':
+            return new CUIStepOut($params);
+
+        case 'xdebug:step_over':
+            return new CUIStepOver($params);
+
         case 'xdebug:run':
             return new CUIRunMessage($params);
 

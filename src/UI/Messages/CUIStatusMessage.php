@@ -20,7 +20,7 @@ class CUIStatusMessage implements IUIMessage
         $session->cmdStatus();
 
         $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
-        d($bag, $session);
+
         $bag->commit($session);
     }
 }

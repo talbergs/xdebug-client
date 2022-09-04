@@ -7,17 +7,23 @@ use Acme\Hub;
 
 class CUISourceMessage implements IUIMessage
 {
+    protected string $sessionid;
+    protected string $filename;
+
     public function __construct(array $params)
     {
+        $this->sessionid = (string) $params['sessionid'];
+        $this->filename = (string) $params['filename'];
     }
 
     public function actOn(Hub $hub)
     {
-        $xdebug_app = $hub->getXDebugSession();
-        $transaction_id = $xdebug_app->cmdSource();
-        $xdebug_app->addCallback($transaction_id, function($xml) {
-            /* d('----', $xml, '----', $this); */
-        });
-        $xdebug_app->commit();
+        $session = $hub->getXDebugSession((int) $this->sessionid);
+
+        $session->cmdSource($this->filename);
+
+        $bag = $hub->xd_map_sessid_to_bag[spl_object_id($session)];
+
+        $bag->commit($session);
     }
 }

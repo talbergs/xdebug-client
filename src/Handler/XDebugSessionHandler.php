@@ -6,6 +6,9 @@ use Acme\Device\IDevice;
 use Acme\Exceptions\XDebugSessionNotFound;
 use Acme\Hub;
 use Acme\UI\Messages\CUIAppStateMessage;
+use Acme\UI\Messages\CUIBreakpointListMessage;
+use Acme\UI\Messages\CUIExitSessionMessage;
+use Acme\UI\Messages\CUISourceMessage;
 use Acme\XDebugApp\Messages\CInitMessage;
 use Acme\XDebugApp\Messages\CMessageFactory;
 use Acme\XDebugApp\Messages\CResponseMessage;
@@ -54,8 +57,8 @@ class XDebugSessionHandler implements IHandler
         /* $session->cmdRun(); */
         // ELSE synthetic "STEP INTO"
         $session->cmdStepInto();
-        $session->cmdBreakpointSet('file:///var/www/html/index.php', 6);
-        $session->cmdBreakpointSet('file:///var/www/html/index.php', 8);
+        $session->cmdBreakpointSet('file:///var/www/html/index.php', 5);
+        $session->cmdBreakpointSet('file:///var/www/html/index2.php', 8);
         $session->cmdBreakpointList();
 
         $this->session_bag->commit($session);
@@ -85,6 +88,13 @@ class XDebugSessionHandler implements IHandler
                 $reason = (string) $imessage->xml->attributes()['reason'];
                 $filename = (string) $imessage->xml->xpath('/a:response/*')[0]->attributes()['filename'];
                 $lineno = (string) $imessage->xml->xpath('/a:response/*')[0]->attributes()['lineno'];
+
+                d('..', $status, $reason, '..');
+
+                (new CUISourceMessage([
+                    'sessionid' => spl_object_id($session),
+                    'filename' => $filename,
+                ]))->actOn($hub);
                 break;
             case 'breakpoint_set':
                 $breakpoint_id = $imessage->xml->attributes()['id'];
@@ -96,6 +106,47 @@ class XDebugSessionHandler implements IHandler
                 break;
             case 'breakpoint_list':
                 $session->setBreakpoints($imessage->readBreakpoints());
+                break;
+            case 'stop':
+                // TODO;
+                // remove session from session bag
+                // remove connection if the last session, debugger engine would leave any way, do not make this unexpected.
+                $status = (string) $imessage->xml->attributes()['status'];
+                $reason = (string) $imessage->xml->attributes()['reason'];
+                break;
+            case 'stack_get':
+                $session->setStack($imessage->readStackGet());
+                break;
+            case 'source':
+                $session->source = explode(PHP_EOL, base64_decode((string) $imessage->xml));
+                break;
+            case 'step_over':
+            case 'run':
+                $run_status = (string) $imessage->xml->attributes()['status'];
+                $reason = (string) $imessage->xml->attributes()['reason'];
+                $filename = (string) $imessage->xml->xpath('//xdebug:message')[0]['filename'];
+                $lineno = (string) $imessage->xml->xpath('//xdebug:message')[0]['lineno'];
+                if ($run_status === 'break') {
+                    (new CUIBreakpointListMessage([
+                        'sessionid' => spl_object_id($session),
+                    ]))->actOn($hub);
+
+                    (new CUISourceMessage([
+                        'sessionid' => spl_object_id($session),
+                        'filename' => $filename,
+                    ]))->actOn($hub);
+
+                    $session->code_lineno = $lineno;
+                } else if ($run_status === 'stopping') {
+                    // if feature_get supports supports_postmortem we may interact with engine at this state
+                    // for now we just always send stop request
+                    (new CUIExitSessionMessage([
+                        'sessionid' => spl_object_id($session),
+                    ]))->actOn($hub);
+                } else {
+                    d($imessage);
+                    info("^^ unknown RUN STATUS {$run_status}");
+                }
                 break;
             case 'typemap_get':
                 $session->setTypemap($imessage->readTypemap());
@@ -113,42 +164,5 @@ class XDebugSessionHandler implements IHandler
 
         // quick refresh
         (new CUIAppStateMessage)->actOn($hub);
-
-        return;
-
-        if ($this->session_bag->state !== "starting") {
-            d("returning");
-            return;
-            throw new \RuntimeException("Session cannot accept another connection in state($this->session_bag->state)");
-        }
-
-        /* if ($this->session->idekey === '') { */
-            // TODO;
-            // If idekey is not specified, we accept any init request, as long as
-            // none of device sessions are in progress yet.
-        /* } */
-
-        if ($imessage->idekey !== $this->session_bag->idekey) {
-            throw new XDebugSessionNotFound();
-        }
-
-        $this->session_bag->state = "running";
-
-        info("Accepted session, negotiating features now...");
-
-        // Loopback device session will write back to (and read from also..).
-        /* $this->session->setDevice($device); */
-
-        // Bootsrap project
-        $this->session_bag->cmdTypemapGet();
-        $this->session_bag->commit();
-        return;
-
-        // what do we got??
-        d($this->session_bag);
-
-        sleep(4);
-        //
-        $this->session_bag->commit();
     }
 }

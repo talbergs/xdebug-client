@@ -2,7 +2,6 @@
 
 namespace Acme\XDebugApp;
 
-use Acme\Connection\IConnection;
 use Acme\XDebugApp\Messages\CInitMessage;
 
 class XDebugSession
@@ -20,6 +19,9 @@ class XDebugSession
 
     public array $typemap = [];
     public array $breakpoints = [];
+    public array $stack = [];
+    public array $source = [];
+    public string $code_lineno = "0";
 
     public string $state = 'starting';
 
@@ -33,6 +35,11 @@ class XDebugSession
         $this->language = '';
     }
 
+    public function setStack(array $stack)
+    {
+        $this->stack = $stack;
+    }
+
     public function setBreakpoints(array $breakpoints)
     {
         $this->breakpoints = $breakpoints;
@@ -41,13 +48,6 @@ class XDebugSession
     public function setTypemap(array $typemap)
     {
         $this->typemap = $typemap;
-    }
-
-    public function commit(IConnection $connection)
-    {
-        foreach ($this->transactions as $line) {
-            $connection->write((string) $line);
-        }
     }
 
     public function onInit(CInitMessage $initmessage)
@@ -205,12 +205,9 @@ class XDebugSession
      * disconnection of the network connection from the IDE
      * (and debugger engine if required in multi request apache processes).
      */
-    public function cmdStop(): string
+    public function cmdStop()
     {
-        $transaction = $this->cmd('stop');
-        $this->transactions[] = $transaction;
-
-        return $transaction->getId();
+        $this->transactions[] = $this->cmd('stop');
     }
 
     /**
@@ -284,8 +281,7 @@ class XDebugSession
 
     public function cmdStackGet()
     {
-        $transaction = $this->cmd('stack_get');
-        $this->transactions[] = $transaction;
+        $this->transactions[] = $this->cmd('stack_get');
     }
 
     /*======================================*/
@@ -347,15 +343,11 @@ class XDebugSession
     /*======================================*/
     /*===         source           ========*/
     /*======================================*/
-    public function cmdSource(): string
+    public function cmdSource(string $filename)
     {
-        $transaction = $this->cmd('source', [
-            '-f file:///home/ada/xdebug-client/example-page.php'
+        $this->transactions[] = $this->cmd('source', [
+            "-f {$filename}"
         ]);
-
-        $this->transactions[] = $transaction;
-
-        return $transaction->getId();
     }
 
     /*======================================*/

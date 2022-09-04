@@ -27,7 +27,7 @@ class XDebugSessionBag
 
     public function commit(XDebugSession $session)
     {
-        foreach ($session->transactions as $line) {
+        while ($line = array_shift($session->transactions)) {
             $this->transactions_id ++;
             $line->setId($this->transactions_id);
             $this->connection->write((string) $line);
